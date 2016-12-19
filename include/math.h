@@ -72,14 +72,14 @@ void bl_vec_homogeneus(float* v);
 void bl_vec_mult(float* r,const float* v,const float* m);
 
 /*!
-	Sets identity matrix
-*/
-void bl_mat_identity(float* m);
-
-/*!
 	Copy matrices
 */
 void bl_mat_copy(float* d,float* s);
+
+/*!
+	Sets identity matrix
+*/
+void bl_mat_identity(float* m);
 
 /*!
 	Sets translation matrix
