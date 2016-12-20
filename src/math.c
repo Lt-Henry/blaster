@@ -17,7 +17,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "math.h"
+#include <blaster/math.h>
+
 #include <math.h>
 
 void bl_vec_set(float* v,float x,float y,float z,float w)

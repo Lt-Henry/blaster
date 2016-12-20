@@ -18,10 +18,11 @@
 */
 
 
-#include <texture.h>
+#include <blaster/texture.h>
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 bl_texture_t* bl_texture_new(int width,int height)
 {
