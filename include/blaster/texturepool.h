@@ -23,6 +23,7 @@
 #include "texture.h"
 
 typedef struct {
+	
 	struct bl_texturepool_node_t* left;
 	struct bl_texturepool_node_t* right;
 	
@@ -33,19 +34,26 @@ typedef struct {
 
 
 typedef struct {
-
+	
+	char* dir;
+	bl_texturepool_node_t* root;
+	
 } bl_texturepool_t;
 
 /*!
+	Creates a new texturepool
 */
-bl_texturepool_t* bl_texturepool_new();
+bl_texturepool_t* bl_texturepool_new(const char* dir);
 
 /*!
+	Free the texturepool
 */
-void bl_texturepool_free(bl_texturepool_t* pool):
+void bl_texturepool_free(bl_texturepool_t* pool);
 
 /*!
+	Gets a pointer to texture given its filename as key, if not found, tries 
+	to it load from disk.
 */
-bl_texture_t* bl_texturepool_get(const char* name);
+bl_texture_t* bl_texturepool_get(bl_texturepool_t* pool,const char* name);
 
 #endif

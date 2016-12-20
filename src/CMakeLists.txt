@@ -1,6 +1,6 @@
 
 #main 
-add_library(blaster STATIC math.c texture.c)
+add_library(blaster STATIC math.c texture.c texturepool.c)
 
 
 #add custom lib flags
