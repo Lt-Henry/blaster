@@ -17,8 +17,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "math.h"
 #include <math.h>
-
 
 void bl_vec_set(float* v,float x,float y,float z,float w)
 {
@@ -77,28 +77,28 @@ void bl_vec_cross(float* r,float* a,float* b)
 
 float bl_vec_norm(const float* v)
 {
-	float tmp=(a[0]*a[0])+(a[1]*a[1])+(a[2]*a[2])+(a[3]*a[3]);
+	float tmp=(v[0]*v[0])+(v[1]*v[1])+(v[2]*v[2])+(v[3]*v[3]);
 	return sqrtf(tmp);
 }
 
 void bl_vec_normalize(float* v)
 {
-	float rW=1.0f/bl_vec_norm(a);
+	float rW=1.0f/bl_vec_norm(v);
 	
-	a[0]*=rW;
-	a[1]*=rW;
-	a[2]*=rW;
-	a[3]*=rW;
+	v[0]*=rW;
+	v[1]*=rW;
+	v[2]*=rW;
+	v[3]*=rW;
 }
 
 void bl_vec_homogeneus(float* v)
 {
-	float rW=1.0f/a[3];
+	float rW=1.0f/v[3];
 	
-	a[0]*=rW;
-	a[1]*=rW;
-	a[2]*=rW;
-	a[3]=1.0f;
+	v[0]*=rW;
+	v[1]*=rW;
+	v[2]*=rW;
+	v[3]=1.0f;
 }
 
 void bl_vec_mult(float* r,const float* v,const float* m)
@@ -236,5 +236,14 @@ void bl_mat_rotation_z(float* m,float rads)
 
 void bl_mat_mult(float* m,float* a,float* b)
 {
+
+	for (int i=0;i<16;i+=4) {
+		for (int j=0;j<4;j++) {
+			m[i + j] = (b[i + 0] * a[j + 0])
+			+ (b[i + 1] * a[j + 4])
+			+ (b[i + 2] * a[j + 8])
+			+ (b[i + 3] * a[j + 12]);
+		}
+	}
 }
 
