@@ -22,6 +22,9 @@
 
 #include "texture.h"
 
+/*!
+	Internal binary tree node
+*/
 typedef struct {
 	
 	struct bl_texturepool_node_t* left;
@@ -32,10 +35,17 @@ typedef struct {
 	
 } bl_texturepool_node_t;
 
+/*!
+	Load texture file callback
+*/
+typedef bl_texture_t* (*bl_texturepool_load_cb_t)(const char*);
 
+/*!
+	Texture pool data structure
+*/
 typedef struct {
 	
-	char* dir;
+	bl_texturepool_load_cb_t load_cb;
 	bl_texturepool_node_t* root;
 	
 } bl_texturepool_t;
@@ -43,7 +53,7 @@ typedef struct {
 /*!
 	Creates a new texturepool
 */
-bl_texturepool_t* bl_texturepool_new(const char* dir);
+bl_texturepool_t* bl_texturepool_new(bl_texturepool_load_cb_t load_cb);
 
 /*!
 	Free the texturepool

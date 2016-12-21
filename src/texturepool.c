@@ -89,20 +89,19 @@ static bl_texturepool_node_t* bl_texturepool_create_node(const char* name,
 	return node;
 }
 
-bl_texturepool_t* bl_texturepool_new(const char* dir)
+bl_texturepool_t* bl_texturepool_new(bl_texturepool_load_cb_t load_cb)
 {
 	bl_texturepool_t* pool = NULL;
 	
 	pool = malloc(sizeof(bl_texturepool_t));
 	
-	pool->dir=strdup(dir);
+	pool->load_cb=load_cb;
 	pool->root=NULL;
 }
 
 void bl_texturepool_free(bl_texturepool_t* pool)
 {
 	bl_texturepool_free_node(pool->root);
-	free(pool->dir);
 	free(pool);
 }
 
@@ -110,8 +109,8 @@ bl_texture_t* bl_texturepool_get(bl_texturepool_t* pool,const char* name)
 {
 	if (pool->root==NULL) {
 		
-		// load texture...
-		
+		bl_texture_t* texture = pool->load_cb(name);
+		pool->root=bl_texturepool_create_node(name,texture);
 		
 	}
 	else {
@@ -119,16 +118,27 @@ bl_texture_t* bl_texturepool_get(bl_texturepool_t* pool,const char* name)
 		bl_texturepool_node_t* target;
 		int cmp = bl_texturepool_find(name,pool->root,&target);
 		
+		// found
 		if (cmp==0) {
 			return target->texture;
 		}
+		else {
 		
-		if (cmp<0) {
+			bl_texture_t* texture = pool->load_cb(name);
+			bl_texturepool_node_t* node=bl_texturepool_create_node(name,texture);
+
+			// fit in left
+			if (cmp<0) {
+				target->left=node;
+			}
+		
+			// fit in right
+			if (cmp>0) {
+				target->right=node;
+			}
+			
+			return texture;
 		}
-		
-		if (cmp<0) {
-		}
-		
 	}
 }
 
