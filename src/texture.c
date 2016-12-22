@@ -45,7 +45,7 @@ bl_texture_t* bl_texture_new_from_data(int width,int height,const void* data)
 	return texture;
 }
 
-void bl_texture_free(bl_texture_t* t)
+void bl_texture_delete(bl_texture_t* t)
 {
 	free(t->data);
 	free(t);

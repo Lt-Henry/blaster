@@ -17,30 +17,39 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef _BLASTER_COLOR_
+#define _BLASTER_COLOR_
 
-#include <blaster/tile.h>
+#include <stdint.h>
 
+/*!
+	Sets a float rgba color
+*/
+void bl_color_set(float* c,float r,float g,float b,float a);
 
-bl_tile_t* bl_tile_new(int x,int y,int width,int height)
-{
-	bl_tile_t* tile;
-	
-	tile=malloc(sizeof(bl_tile_t));
-	
-	tile->x=x;
-	tile->y=y;
-	tile->width=width;
-	tile->height=height;
-	
-	tile->color=malloc(sizeof(uint32_t)*width*height);
-	tile->depth=malloc(sizeof(uint16_t)*width*height);
-	
-	return tile;
-}
+/*!
+	Adds two colors
+*/
+void bl_color_add(float* c,float* a,float* b);
 
-void bl_tile_delete(bl_tile_t* tile)
-{
-	free(tile->color);
-	free(tile->depth);
-	free(tile);
-}
+/*!
+	Substracts two colors
+*/
+void bl_color_sub(float* c,float* a,float* b);
+
+/*!
+	clamp color to [0,1] range
+*/
+void bl_color_clamp(float* c);
+
+/*!
+	color to pixel
+*/
+uint32_t bl_color_get_pixel(const float* c);
+
+/*!
+	pixel to color
+*/
+void bl_color_from_pixel(float* c,uint32_t pixel);
+
+#endif

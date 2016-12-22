@@ -43,7 +43,7 @@ bl_texture_t* bl_texture_new_from_data(int width,int height,const void* data);
 /*!
 	Free a texture 
 */
-void bl_texture_free(bl_texture_t* t);
+void bl_texture_delete(bl_texture_t* t);
 
 /*!
 	Sets a pixel

@@ -58,7 +58,7 @@ bl_texturepool_t* bl_texturepool_new(bl_texturepool_load_cb_t load_cb);
 /*!
 	Free the texturepool
 */
-void bl_texturepool_free(bl_texturepool_t* pool);
+void bl_texturepool_delete(bl_texturepool_t* pool);
 
 /*!
 	Gets a pointer to texture given its filename as key, if not found, tries 

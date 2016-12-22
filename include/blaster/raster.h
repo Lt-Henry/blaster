@@ -45,7 +45,7 @@ bl_raster_t* bl_raster_new();
 /*!
 	Free raster
 */
-void bl_raster_free(bl_raster_t* raster);
+void bl_raster_delete(bl_raster_t* raster);
 
 /*!
 	Resize framebuffer

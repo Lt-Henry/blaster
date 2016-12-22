@@ -29,7 +29,7 @@ typedef struct {
 	int x;
 	int y;
 	
-	uint32_t* pixel;
+	uint32_t* color;
 	uint16_t* depth;
 } bl_tile_t;
 
@@ -41,7 +41,7 @@ bl_tile_t* bl_tile_new(int x,int y,int width,int height);
 /*!
 	Free tile
 */
-void bl_tile_free(bl_tile_t* tile);
+void bl_tile_delete(bl_tile_t* tile);
 
 #endif
 

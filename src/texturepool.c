@@ -23,13 +23,13 @@
 #include <string>
 
 
-static void bl_texturepool_free_node(bl_texturepool_node_t* node)
+static void bl_texturepool_delete_node(bl_texturepool_node_t* node)
 {
 	if (node!=NULL) {
 		free(node->name);
 		bl_texture_free(node->texture);
-		bl_texturepool_free_node(node->left);
-		bl_texturepool_free_node(node->right);
+		bl_texturepool_delete_node(node->left);
+		bl_texturepool_delete_node(node->right);
 		free(node);
 	}
 }
@@ -99,9 +99,9 @@ bl_texturepool_t* bl_texturepool_new(bl_texturepool_load_cb_t load_cb)
 	pool->root=NULL;
 }
 
-void bl_texturepool_free(bl_texturepool_t* pool)
+void bl_texturepool_delete(bl_texturepool_t* pool)
 {
-	bl_texturepool_free_node(pool->root);
+	bl_texturepool_delete_node(pool->root);
 	free(pool);
 }
 
