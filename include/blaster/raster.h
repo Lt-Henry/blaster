@@ -20,7 +20,6 @@
 #ifndef _BLASTER_RASTER_
 #define _BLASTER_RASTER_
 
-#define BL_RASTER_TILE_SIZE 64
 
 #include "tile.h"
 

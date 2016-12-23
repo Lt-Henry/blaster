@@ -18,6 +18,7 @@
 */
 
 #include <blaster/raster.h>
+#include <blaster/constants.h>
 
 #include <stdio.h>
 
@@ -58,11 +59,11 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 	bl_raster_clean_tiles();
 	
 	// compute number of tiles and real size (which may be smaller than requested)
-	raster->tiles_width=width/BL_RASTER_TILE_SIZE;
-	raster->tiles_height=height/BL_RASTER_TILE_SIZE;
+	raster->tiles_width=width/BL_TILE_SIZE;
+	raster->tiles_height=height/BL_TILE_SIZE;
 	
-	raster->screen_width=raster->tiles_width*BL_RASTER_TILE_SIZE;
-	raster->screen_height=raster->tiles_height*BL_RASTER_TILE_SIZE;
+	raster->screen_width=raster->tiles_width*BL_TILE_SIZE;
+	raster->screen_height=raster->tiles_height*BL_TILE_SIZE;
 	
 	raster->tiles=malloc(sizeof(tile_t*)*raster->tiles_width*raster->tiles_height);
 	
@@ -70,10 +71,10 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 		for (int i=0;i<raster->tiles_width;i++) {
 			int index = i+j*raster->tiles_width;
 			
-			int x=i*BL_RASTER_TILE_SIZE;
-			int y=j*BL_RASTER_TILE_SIZE;
+			int x=i*BL_TILE_SIZE;
+			int y=j*BL_TILE_SIZE;
 
-			raster->tiles[index]=bl_tile_new(x,y,BL_RASTER_TILE_SIZE,BL_RASTER_TILE_SIZE);
+			raster->tiles[index]=bl_tile_new(x,y,BL_TILE_SIZE,BL_TILE_SIZE);
 		}
 	}
 }

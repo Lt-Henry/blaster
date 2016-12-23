@@ -17,41 +17,15 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef _BLASTER_CONSTANTS_
+#define _BLASTER_CONSTANTS_
 
-#include <blaster/tile.h>
+/*! tile size */
+#define BL_TILE_SIZE	64
 
+/*! vbo types */
+#define BL_POINTS	1
+#define BL_LINES	2
+#define BL_TRIANGLES	3
 
-bl_tile_t* bl_tile_new(int x,int y,int width,int height)
-{
-	bl_tile_t* tile;
-	
-	tile=malloc(sizeof(bl_tile_t));
-	
-	tile->x=x;
-	tile->y=y;
-	tile->width=width;
-	tile->height=height;
-	
-	tile->color=malloc(sizeof(uint32_t)*width*height);
-	tile->depth=malloc(sizeof(uint16_t)*width*height);
-	
-	return tile;
-}
-
-void bl_tile_delete(bl_tile_t* tile)
-{
-	free(tile->color);
-	free(tile->depth);
-	free(tile);
-}
-
-void bl_tile_clear(bl_tile* tile,uint32_t color,uint16_t depth)
-{
-	for (int j=0;j<tile->height;j++) {
-		for (int i=0;i<tile->width;i++) {
-			int index=i+j*tile->width;
-			tile->color[index]=color;
-			tile->depth[index]=depth;
-		}
-	}
-}
+#endif
