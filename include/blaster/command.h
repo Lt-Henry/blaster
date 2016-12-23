@@ -17,26 +17,35 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_CONSTANTS_
-#define _BLASTER_CONSTANTS_
+#ifndef _BLASTER_COMMAND_
+#define _BLASTER_COMMAND_
 
-/*! tile size */
-#define BL_TILE_SIZE	64
+#include "tile.h"
+#include "texture.h"
 
-/*! command queue size */
-#define BL_CMD_SIZE	1024
+#include <stdint.h>
 
-/*! vbo types */
-#define BL_POINTS	1
-#define BL_LINES	2
-#define BL_TRIANGLES	3
+/*! command structure */
+typedef struct {
 
-/*! commands */
-#define BL_CMD_NONE	0
-#define BL_CMD_QUIT	1
-#define BL_CMD_CLEAR	2
-#define BL_CMD_DRAW	3
-#define BL_CMD_UPDATE	4
-#define BL_CMD_TEXTURE	5
+	/*! command type (see contants.h) */
+	uint8_t type;
+	
+	union {
+		
+		struct {
+			bl_tile_t* tile;
+		} clear;
+		
+		struct {
+			bl_tile_t* tile;
+		} draw;
+		
+		struct {
+			bl_texture_t* texture;
+		} texture;
+	};
+	
+} bl_command_t;
 
 #endif

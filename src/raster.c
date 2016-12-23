@@ -45,11 +45,17 @@ bl_raster_t* bl_raster_new()
 	raster->tiles_height=0;
 	raster->tiles=NULL;
 	
+	raster->cmd_queue=malloc(sizeof(bl_command_t)*BL_CMD_SIZE);
+	raster->cmd_begin=0;
+	raster->cmd_end=0;
+	
 	return raster;
 }
 
 void bl_raster_delete(bl_raster_t* raster)
 {
+	free(raster->cmd_queue);
+	
 	bl_raster_clean_tiles();
 	free(raster);
 }

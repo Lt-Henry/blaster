@@ -22,18 +22,33 @@
 
 
 #include "tile.h"
+#include "command.h"
 
 /*!
 	Raster main structure
 */
 typedef struct {
 
+	/*! number of tiles in x */
 	int tiles_width;
+	
+	/*! number of tiles in y */
 	int tiles_height;
+	
+	/*! screen width in pixels */
 	int screen_width;
+	
+	/*! screen height in pixels */
 	int screen_height;
 	
 	bl_tile_t** tiles;
+	
+	/*! Command ring buffer */
+	bl_command_t* cmd_queue;
+	
+	int cmd_begin;
+	int cmd_end;
+	
 } bl_raster_t;
 
 /*!
