@@ -48,6 +48,7 @@ typedef struct {
 	
 	int cmd_begin;
 	int cmd_end;
+	int cmd_size;
 	
 } bl_raster_t;
 

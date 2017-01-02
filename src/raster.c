@@ -35,6 +35,32 @@ static void bl_raster_clean_tiles()
 
 }
 
+static void bl_raster_cmd_queue(bl_raster_t* raster,bl_raster_t cmd)
+{
+	if (raster->cmd_size<BL_CMD_SIZE) {
+	
+		raster->cmd_size++;
+		raster->cmd_end=(raster->cmd_end+1)%BL_CMD_SIZE;
+		raster->cmd_queue[raster->cmd_end]=cmd;
+	}
+}
+
+static bl_command_t bl_raster_cmd_dequeue(bl_raster_t* raster)
+{
+
+	bl_command_t cmd;
+	cmd.type=BL_CMD_NONE;
+	
+	if (raster->cmd_size>0) {
+	
+		raster->cmd_size--;
+		cmd=raster->cmd_queue[raster->cmd_begin];
+		raster->cmd_begin=(raster->cmd_begin+1)%BL_CMD_SIZE;
+	}
+	
+	return cmd;
+}
+
 bl_raster_t* bl_raster_new()
 {
 	bl_raster_t* raster;
@@ -46,8 +72,9 @@ bl_raster_t* bl_raster_new()
 	raster->tiles=NULL;
 	
 	raster->cmd_queue=malloc(sizeof(bl_command_t)*BL_CMD_SIZE);
-	raster->cmd_begin=0;
+	raster->cmd_begin=1;
 	raster->cmd_end=0;
+	raster->cmd_size=0;
 	
 	return raster;
 }
