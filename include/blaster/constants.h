@@ -26,17 +26,26 @@
 /*! command queue size */
 #define BL_CMD_SIZE	1024
 
-/*! vbo types */
-#define BL_POINTS	1
-#define BL_LINES	2
-#define BL_TRIANGLES	3
-
 /*! commands */
 #define BL_CMD_NONE	0
 #define BL_CMD_QUIT	1
-#define BL_CMD_CLEAR	2
-#define BL_CMD_DRAW	3
-#define BL_CMD_UPDATE	4
-#define BL_CMD_TEXTURE	5
+#define BL_CMD_CLEAR	2 /*! clear tile */
+#define BL_CMD_DRAW	3	/*! render tile */
+#define BL_CMD_UPDATE	4 /*! render all tiles */
+#define BL_CMD_TEXTURE	5 /*! bind texture */
+#define BL_CMD_VBO	6 /*! process vbo */
+
+/*! vbo types */
+#define BL_VBO_POINTS	1
+#define BL_VBO_LINES	2
+#define BL_VBO_TRIANGLES	3
+
+/*! vbo properties */
+#define BL_VBO_VERTEX	1
+#define BL_VBO_NORMAL	2
+#define BL_VBO_COLOR	4
+#define BL_VBO_UV	8
+#define BL_VBO_USER	16
+
 
 #endif

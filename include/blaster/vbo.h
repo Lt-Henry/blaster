@@ -1,7 +1,7 @@
 /*
 	blaster
 	
-	Copyright (C) 2016  Enrique Medina Gremaldos <quiqueiii@gmail.com>
+	Copyright (C) 2017  Enrique Medina Gremaldos <quiqueiii@gmail.com>
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -17,40 +17,35 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_COMMAND_
-#define _BLASTER_COMMAND_
-
-#include "tile.h"
-#include "texture.h"
-#include "vbo.h"
+#ifndef _BLASTER_VBO_
+#define _BLASTER_VBO_
 
 #include <stdint.h>
 
-/*! command structure */
 typedef struct {
+	uint32_t type;
+	uint32_t properties;
+	size_t size;
+	float* vertices;
+	float* normals;
+	float* colors;
+	float* uvs;
+	
+} bl_vbo_t;
 
-	/*! command type (see contants.h) */
-	uint8_t type;
-	
-	union {
-		
-		struct {
-			bl_tile_t* tile;
-		} clear;
-		
-		struct {
-			bl_tile_t* tile;
-		} draw;
-		
-		struct {
-			bl_texture_t* texture;
-		} texture;
-		
-		struct {
-			bl_vbo_t* vbo;
-		} vbo;
-	};
-	
-} bl_command_t;
+/*!
+	Create a new vbo of given size
+*/
+bl_vbo_t* bl_vbo_new(uint32_t type,size_t size, uint32_t properties);
+
+/*!
+	Destroys vbo
+*/
+void bl_vbo_delete(bl_vbo_t* vbo);
+
+/*!
+	Gets pointer to Nth element
+*/
+float* bl_vbo_get(bl_vbo_t* vbo,uint32_t property,int index);
 
 #endif
