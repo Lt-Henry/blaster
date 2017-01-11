@@ -20,6 +20,8 @@
 
 #include <blaster/tile.h>
 
+#include <stdlib.h>
+
 
 bl_tile_t* bl_tile_new(int x,int y,int width,int height)
 {
@@ -45,7 +47,7 @@ void bl_tile_delete(bl_tile_t* tile)
 	free(tile);
 }
 
-void bl_tile_clear(bl_tile* tile,uint32_t color,uint16_t depth)
+void bl_tile_clear(bl_tile_t* tile,uint32_t color,uint16_t depth)
 {
 	for (int j=0;j<tile->height;j++) {
 		for (int i=0;i<tile->width;i++) {

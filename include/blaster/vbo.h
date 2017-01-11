@@ -21,6 +21,7 @@
 #define _BLASTER_VBO_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct {
 	uint32_t type;

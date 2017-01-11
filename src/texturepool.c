@@ -20,14 +20,14 @@
 #include <blaster/texturepool.h>
 
 #include <stdlib.h>
-#include <string>
+#include <string.h>
 
 
 static void bl_texturepool_delete_node(bl_texturepool_node_t* node)
 {
 	if (node!=NULL) {
 		free(node->name);
-		bl_texture_free(node->texture);
+		bl_texture_delete(node->texture);
 		bl_texturepool_delete_node(node->left);
 		bl_texturepool_delete_node(node->right);
 		free(node);

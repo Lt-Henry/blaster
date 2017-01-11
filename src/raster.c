@@ -21,21 +21,22 @@
 #include <blaster/constants.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 
-static void bl_raster_clean_tiles()
+static void bl_raster_clean_tiles(bl_raster_t* raster)
 {
 	int N=raster->tiles_width*raster->tiles_height;
 	
 	for (int n=0;n<N;n++) {
-		bl_tile_free(raster->tiles[n]);
+		bl_tile_delete(raster->tiles[n]);
 	}
 
 	free(raster->tiles);
 
 }
 
-static void bl_raster_cmd_queue(bl_raster_t* raster,bl_raster_t cmd)
+static void bl_raster_cmd_queue(bl_raster_t* raster,bl_command_t cmd)
 {
 	if (raster->cmd_size<BL_CMD_SIZE) {
 	
@@ -83,13 +84,13 @@ void bl_raster_delete(bl_raster_t* raster)
 {
 	free(raster->cmd_queue);
 	
-	bl_raster_clean_tiles();
+	bl_raster_clean_tiles(raster);
 	free(raster);
 }
 
 void bl_raster_resize(bl_raster_t* raster,int width,int height)
 {
-	bl_raster_clean_tiles();
+	bl_raster_clean_tiles(raster);
 	
 	// compute number of tiles and real size (which may be smaller than requested)
 	raster->tiles_width=width/BL_TILE_SIZE;
@@ -98,7 +99,7 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 	raster->screen_width=raster->tiles_width*BL_TILE_SIZE;
 	raster->screen_height=raster->tiles_height*BL_TILE_SIZE;
 	
-	raster->tiles=malloc(sizeof(tile_t*)*raster->tiles_width*raster->tiles_height);
+	raster->tiles=malloc(sizeof(bl_tile_t*)*raster->tiles_width*raster->tiles_height);
 	
 	for (int j=0;j<raster->tiles_height;j++) {
 		for (int i=0;i<raster->tiles_width;i++) {
@@ -112,3 +113,29 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 	}
 }
 
+void bl_raster_clear(bl_raster_t* raster)
+{
+	bl_command_t cmd;
+	
+	cmd.type=BL_CMD_CLEAR;
+	
+	int num_tiles=raster->tiles_width*raster->tiles_height;
+	
+	for (int n=0;n<num_tiles;n++) {
+		cmd.clear.tile=raster->tiles[n];
+		bl_raster_cmd_queue(raster,cmd);
+	}
+}
+
+void bl_raster_update(bl_raster_t* raster)
+{
+	while (raster->cmd_size>0) {
+		bl_command_t cmd = bl_raster_cmd_dequeue(raster);
+		
+		switch (cmd.type) {
+			case BL_CMD_CLEAR:
+				bl_tile_clear(cmd.clear.tile,0xff0000ff,0xffff);
+			break;
+		}
+	}
+}

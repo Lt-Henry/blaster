@@ -19,6 +19,7 @@
 
 
 #include <blaster/vbo.h>
+#include <blaster/constants.h>
 
 
 bl_vbo_t* bl_vbo_new(uint32_t type,size_t size, uint32_t properties)

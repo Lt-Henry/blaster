@@ -67,5 +67,14 @@ void bl_raster_delete(bl_raster_t* raster);
 */
 void bl_raster_resize(bl_raster_t* raster,int width,int height);
 
+/*!
+	Clear buffers
+*/
+void bl_raster_clear(bl_raster_t* raster);
+
+/*!
+	Update (flush all commands and render result)
+*/
+void bl_raster_update(bl_raster_t* raster);
 #endif
 

@@ -46,7 +46,7 @@ void bl_tile_delete(bl_tile_t* tile);
 /*!
 	Clear both depth and color buffers
 */
-void bl_tile_clear(bl_tile* tile,uint32_t color,uint16_t depth);
+void bl_tile_clear(bl_tile_t* tile,uint32_t color,uint16_t depth);
 
 #endif
 
