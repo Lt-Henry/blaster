@@ -21,6 +21,10 @@
 #ifndef _BLASTER_MATH_
 #define _BLASTER_MATH_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
 	Sets vector values
 */
@@ -105,5 +109,9 @@ void bl_mat_rotation_z(float* m,float rads);
 	Matrix multiplication
 */
 void bl_mat_mult(float* m,float* a,float* b);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

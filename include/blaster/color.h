@@ -22,6 +22,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*!
 	Sets a float rgba color
 */
@@ -51,5 +55,9 @@ uint32_t bl_color_get_pixel(const float* c);
 	pixel to color
 */
 void bl_color_from_pixel(float* c,uint32_t pixel);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
