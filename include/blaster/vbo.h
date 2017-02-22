@@ -17,8 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_VBO_
-#define _BLASTER_VBO_
+#ifndef BLASTER_VBO
+#define BLASTER_VBO
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -48,5 +52,9 @@ void bl_vbo_delete(bl_vbo_t* vbo);
 	Gets pointer to Nth element
 */
 float* bl_vbo_get(bl_vbo_t* vbo,uint32_t property,int index);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

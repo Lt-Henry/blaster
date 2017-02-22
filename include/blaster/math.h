@@ -18,8 +18,8 @@
 */
 
 
-#ifndef _BLASTER_MATH_
-#define _BLASTER_MATH_
+#ifndef BLASTER_MATH
+#define BLASTER_MATH
 
 #ifdef __cplusplus
 extern "C" {

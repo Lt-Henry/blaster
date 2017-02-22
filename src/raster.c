@@ -113,6 +113,16 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 	}
 }
 
+void bl_raster_set_clear_color(bl_raster_t* raster,uint32_t color)
+{
+	bl_command_t cmd;
+	
+	cmd.type=BL_CMD_CLEAR_COLOR;
+	cmd.clear_color.color=color;
+	
+	bl_raster_cmd_queue(raster,cmd);
+}
+
 void bl_raster_clear(bl_raster_t* raster)
 {
 	bl_command_t cmd;
@@ -139,3 +149,14 @@ void bl_raster_update(bl_raster_t* raster)
 		}
 	}
 }
+
+int bl_raster_get_width(bl_raster_t* raster)
+{
+	return raster->screen_width;
+}
+
+int bl_raster_get_height(bl_raster_t* raster)
+{
+	return raster->screen_height;
+}
+

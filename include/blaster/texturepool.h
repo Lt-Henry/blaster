@@ -17,8 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_TEXTUREPOOL_
-#define _BLASTER_TEXTUREPOOL_
+#ifndef BLASTER_TEXTUREPOOL
+#define BLASTER_TEXTUREPOOL
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "texture.h"
 
@@ -65,5 +69,9 @@ void bl_texturepool_delete(bl_texturepool_t* pool);
 	to it load from disk.
 */
 bl_texture_t* bl_texturepool_get(bl_texturepool_t* pool,const char* name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

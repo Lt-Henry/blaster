@@ -17,8 +17,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_CONSTANTS_
-#define _BLASTER_CONSTANTS_
+#ifndef BLASTER_CONSTANTS
+#define BLASTER_CONSTANTS
 
 /*! tile size */
 #define BL_TILE_SIZE	64
@@ -34,6 +34,7 @@
 #define BL_CMD_UPDATE	4 /*! render all tiles */
 #define BL_CMD_TEXTURE	5 /*! bind texture */
 #define BL_CMD_VBO	6 /*! process vbo */
+#define BL_CMD_CLEAR_COLOR	7 /*! sets clear color */
 
 /*! vbo types */
 #define BL_VBO_POINTS	1

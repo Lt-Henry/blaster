@@ -17,8 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_TILE_
-#define _BLASTER_TILE_
+#ifndef BLASTER_TILE
+#define BLASTER_TILE
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -47,6 +51,10 @@ void bl_tile_delete(bl_tile_t* tile);
 	Clear both depth and color buffers
 */
 void bl_tile_clear(bl_tile_t* tile,uint32_t color,uint16_t depth);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 

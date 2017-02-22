@@ -17,8 +17,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_COLOR_
-#define _BLASTER_COLOR_
+#ifndef BLASTER_COLOR
+#define BLASTER_COLOR
 
 #include <stdint.h>
 

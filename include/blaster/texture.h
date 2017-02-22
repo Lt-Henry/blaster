@@ -17,8 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_TEXTURE_
-#define _BLASTER_TEXTURE_
+#ifndef BLASTER_TEXTURE
+#define BLASTER_TEXTURE
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -54,5 +58,9 @@ void bl_texture_set_pixel(bl_texture_t* t,int x,int y,uint32_t pixel);
 	Gets a pixel
 */
 uint32_t bl_texture_get_pixel(bl_texture_t* t,int x,int y);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -17,9 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_RASTER_
-#define _BLASTER_RASTER_
+#ifndef BLASTER_RASTER
+#define BLASTER_RASTER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "tile.h"
 #include "command.h"
@@ -68,6 +71,11 @@ void bl_raster_delete(bl_raster_t* raster);
 void bl_raster_resize(bl_raster_t* raster,int width,int height);
 
 /*!
+	Sets clear pixel color
+*/
+void bl_raster_set_clear_color(bl_raster_t* raster,uint32_t color);
+
+/*!
 	Clear buffers
 */
 void bl_raster_clear(bl_raster_t* raster);
@@ -76,5 +84,20 @@ void bl_raster_clear(bl_raster_t* raster);
 	Update (flush all commands and render result)
 */
 void bl_raster_update(bl_raster_t* raster);
+
+/*!
+	Get width in pixels, which should be a multiple of tiles_width
+*/
+int bl_raster_get_width(bl_raster_t* raster);
+
+/*!
+	Get height in pixels, which should be a multiple of tiles_height
+*/
+int bl_raster_get_height(bl_raster_t* raster);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
 

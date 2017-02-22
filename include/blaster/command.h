@@ -17,8 +17,12 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BLASTER_COMMAND_
-#define _BLASTER_COMMAND_
+#ifndef BLASTER_COMMAND
+#define BLASTER_COMMAND
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "tile.h"
 #include "texture.h"
@@ -49,8 +53,16 @@ typedef struct {
 		struct {
 			bl_vbo_t* vbo;
 		} vbo;
+		
+		struct {
+			uint32_t color;
+		} clear_color;
 	};
 	
 } bl_command_t;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
