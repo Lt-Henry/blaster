@@ -28,30 +28,49 @@ extern "C" {
 #include <stdlib.h>
 
 typedef struct {
-	uint32_t type;
-	uint32_t properties;
+	/*! number of values */
+	uint8_t size;
+	
+	/*! data type */
+	uint8_t type;
+	
+	/*! settings mask */
+	uint8_t settings;
+	
+	/*! attribute name */
+	char* name;
+} bl_attribute_t;
+
+typedef struct {
+	/*! primitive type (triangles,lines,points) */
+	uint8_t primitive;
+	
+	/*! number of primitives */
 	size_t size;
-	float* vertices;
-	float* normals;
-	float* colors;
-	float* uvs;
+	
+	/*! number of attributes */
+	uint8_t attributes;
+	
+	/*! struct storing attribute settings */
+	bl_attribute_t attribute[8];
+	
+	/*! pointer to vbo data */
+	void* data; 
+	
 	
 } bl_vbo_t;
 
 /*!
 	Create a new vbo of given size
 */
-bl_vbo_t* bl_vbo_new(uint32_t type,size_t size, uint32_t properties);
+bl_vbo_t* bl_vbo_new(uint8_t primitive,size_t size,void* data);
 
 /*!
 	Destroys vbo
 */
 void bl_vbo_delete(bl_vbo_t* vbo);
 
-/*!
-	Gets pointer to Nth element
-*/
-float* bl_vbo_get(bl_vbo_t* vbo,uint32_t property,int index);
+
 
 #ifdef __cplusplus
 }

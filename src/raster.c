@@ -144,7 +144,7 @@ void bl_raster_update(bl_raster_t* raster)
 		
 		switch (cmd.type) {
 			case BL_CMD_CLEAR:
-				bl_tile_clear(cmd.clear.tile,0xff0000ff,0xffff);
+				bl_tile_clear(cmd.clear.tile,0xffdedede,0xffff);
 			break;
 		}
 	}
