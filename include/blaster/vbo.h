@@ -48,9 +48,6 @@ typedef struct {
 	/*! number of primitives */
 	size_t size;
 	
-	/*! number of attributes */
-	uint8_t attributes;
-	
 	/*! struct storing attribute settings */
 	bl_attribute_t attribute[8];
 	
@@ -71,6 +68,14 @@ bl_vbo_t* bl_vbo_new(uint8_t primitive,size_t size,void* data);
 void bl_vbo_delete(bl_vbo_t* vbo);
 
 
+/*!
+	Sets up and attribute
+	\param id an integer from 0 to 7
+	\param type the type of the attribute, usually BL_FLOAT
+	\param size number of values, ie: 2 for a UV coords
+	\param name just a representative name
+*/
+int bl_vbo_set_attribute(bl_vbo_t* vbo,int id,uint8_t type,uint8_t size,uint8_t settings,const char* name);
 
 #ifdef __cplusplus
 }

@@ -41,12 +41,14 @@
 #define BL_VBO_LINES	2
 #define BL_VBO_TRIANGLES	3
 
-/*! vbo properties */
-#define BL_VBO_VERTEX	1
-#define BL_VBO_NORMAL	2
-#define BL_VBO_COLOR	4
-#define BL_VBO_UV	8
-#define BL_VBO_USER	16
+/*! vbo attribute types */
+#define BL_VBO_BYTE	0
+#define BL_VBO_FLOAT	1
+#define BL_VBO_INT32	2
+
+/*! vbo attribute settings */
+#define BL_VBO_IGNORE	1
+#define BL_VBO_LINEAR	2	/*! linear interpolation instead of perspective corrected */
 
 
 #endif
