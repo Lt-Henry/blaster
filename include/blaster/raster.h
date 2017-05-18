@@ -47,11 +47,7 @@ typedef struct {
 	bl_tile_t** tiles;
 	
 	/*! Command ring buffer */
-	bl_command_t* cmd_queue;
-	
-	int cmd_begin;
-	int cmd_end;
-	int cmd_size;
+	bl_command_buffer_t* cmd_queue;
 	
 } bl_raster_t;
 

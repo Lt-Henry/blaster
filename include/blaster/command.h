@@ -61,6 +61,26 @@ typedef struct {
 	
 } bl_command_t;
 
+/*! command queue */
+typedef struct {
+
+	bl_command_t* data;
+	int full_size;
+	int begin;
+	int end;
+	int size;
+	
+} bl_command_buffer_t;
+
+
+bl_command_buffer_t* bl_command_buffer_new(int size);
+
+void bl_command_buffer_delete(bl_command_buffer_t* buffer);
+
+void bl_command_buffer_queue(bl_command_buffer_t* buffer, bl_command_t cmd);
+
+bl_command_t bl_command_buffer_dequeue(bl_command_buffer_t* buffer);
+
 #ifdef __cplusplus
 }
 #endif
