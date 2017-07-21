@@ -21,7 +21,7 @@
 
 bl_command_buffer_t* bl_command_buffer_new(int size)
 {
-	bl_command_buffer* buffer;
+	bl_command_buffer_t* buffer;
 	
 	buffer = malloc(sizeof(bl_command_buffer_t));
 	
