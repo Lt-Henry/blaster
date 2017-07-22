@@ -15,38 +15,49 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
+*/
+
+#ifndef BLASTER_TGA
+#define BLASTER_TGA
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "texture.h"
+
+typedef struct __attribute__((__packed__)) {
+    uint8_t id_size;
+    uint8_t color_map_type;
+    uint8_t image_type;
     
+    uint16_t color_map_origin;
+    uint16_t color_map_length;
+    uint8_t color_map_entry;
     
-#include <stdio.h>
-#include <blaster/math.h>
+    uint16_t x_origin;
+    uint16_t y_origin;
+    uint16_t width;
+    uint16_t height;
+
+    uint8_t bpp;
+    uint8_t descriptor;
+    
+} bl_tga_header_t;
+
+/*!
+    Create a new texture from a tga file
+*/
+bl_texture_t* bl_tga_load(const char* filename);
+
+/*!
+    Save a texture into a tga file
+*/
+void bl_tga_save(bl_texture_t* texture, const char* filename);
 
 
-int main(int argc,char* argv[])
-{
-    float v1[4];
-    float v2[4];
-    float v3[4];
-    
-    float value;
-    
-    printf("testing math module:\n\n");
-    
-    bl_vec_set(v1,0.0f,1.0f,0.0f,1.0f);
-    bl_vec_set(v2,1.0f,0.0f,1.0f,0.0f);
-    
-    bl_vec_add(v3,v1,v2);
-    
-    printf("bl_vec_add: %.2f %.2f %.2f %.2f\n",v3[0],v3[1],v3[2],v3[3]);
-    
-    bl_vec_set(v1,2.0f,2.0f,2.0f,0.0f);
-    bl_vec_normalize (v1);
-
-    printf("bl_vec_normalize: %.2f %.2f %.2f %.2f\n",v1[0],v1[1],v1[2],v1[3]);
-    
-    value=bl_vec_norm(v1);
-
-    printf("bl_vec_norm: %.2f\n",value);
-
-    return 0;
+#ifdef __cplusplus
 }
+#endif
+
+#endif
