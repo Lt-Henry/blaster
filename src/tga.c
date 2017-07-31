@@ -36,5 +36,31 @@ void bl_tga_save(bl_texture_t* texture, const char* filename)
     
     file = fopen(filename,"w");
     
+    bl_tga_header_t header;
+    
+    header.id_size=0;
+    header.color_map_type=0;
+    header.image_type=2;
+    
+    header.color_map_origin=0;
+    header.color_map_length=0;
+    header.color_map_entry=0;
+    
+    header.x_origin=0;
+    header.y_origin=0;
+    header.width=texture->width;
+    header.height=texture->height;
+    
+    header.bpp=24;
+    header.descriptor=0;
+    
+    fwrite(&header,sizeof(bl_tga_header_t),1,file);
+    
+    int img_size=header.width*header.height;
+    
+    for (int n=0;n<img_size;n++) {
+        fwrite(&texture->data[n],sizeof(uint32_t),1,file);
+    }
+    
     fclose(file);
 }
