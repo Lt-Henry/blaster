@@ -51,7 +51,7 @@ void bl_tga_save(bl_texture_t* texture, const char* filename)
     header.width=texture->width;
     header.height=texture->height;
     
-    header.bpp=24;
+    header.bpp=32;
     header.descriptor=0;
     
     fwrite(&header,sizeof(bl_tga_header_t),1,file);

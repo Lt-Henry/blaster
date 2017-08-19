@@ -65,10 +65,10 @@ uint32_t bl_color_get_pixel(const float* c)
 	
 	uint32_t ci[4];
 	
-	ci[0]=c[0];
-	ci[1]=c[1];
-	ci[2]=c[2];
-	ci[3]=c[3];
+	ci[0]=c[0]*255.0f;
+	ci[1]=c[1]*255.0f;
+	ci[2]=c[2]*255.0f;
+	ci[3]=c[3]*255.0f;
 	
 	pixel=(ci[0]<<24) | (ci[1]<<16) | (ci[2]<<8) | ci[3];
 	
