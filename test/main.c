@@ -46,6 +46,7 @@ int main(int argc,char* argv[])
     
     
     printf("bl_color_add: %.2f %.2f %.2f %.2f\n",c3[0],c3[1],c3[2],c3[3]);
+    printf("bl_color_get_pixel: %X\n",bl_color_get_pixel(c1));
 
 
     float v1[4];
@@ -79,15 +80,15 @@ int main(int argc,char* argv[])
     
     texture = bl_texture_new(800,600);
     
-    bl_color_set(c1,1.0f,0.0f,0.0f,1.0f);
+    bl_color_set(c1,0.0f,0.0f,0.0f,1.0f);
     
     for (int j=0;j<600;j++) {
         for (int i=0;i<800;i++) {
             float u = i/800.0f;
             float v = j/600.0f;
             
-            c1[1]=u;
-            c1[2]=v;
+            c1[0]=u;
+            c1[1]=v;
             
             uint32_t pixel = bl_color_get_pixel(c1);
             bl_texture_set_pixel(texture,i,j,pixel);

@@ -1,20 +1,20 @@
 /*
-	blaster
-	
-	Copyright (C) 2016  Enrique Medina Gremaldos <quiqueiii@gmail.com>
+    blaster
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    Copyright (C) 2016  Enrique Medina Gremaldos <quiqueiii@gmail.com>
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef BLASTER_COLOR
@@ -27,32 +27,42 @@ extern "C" {
 #endif
 
 /*!
-	Sets a float rgba color
+    Sets a float rgba color
 */
 void bl_color_set(float* c,float r,float g,float b,float a);
 
 /*!
-	Adds two colors
+    Adds two colors
 */
 void bl_color_add(float* c,float* a,float* b);
 
 /*!
-	Substracts two colors
+    Substracts two colors
 */
 void bl_color_sub(float* c,float* a,float* b);
 
 /*!
-	clamp color to [0,1] range
+    Mult a color by a scalar
+*/
+void bl_color_scale(float* c,float s);
+
+/*!
+    Mult two colors
+*/
+void bl_color_mult(float* c,float* a,float* b);
+
+/*!
+    clamp color to [0,1] range
 */
 void bl_color_clamp(float* c);
 
 /*!
-	color to pixel
+    color to pixel
 */
 uint32_t bl_color_get_pixel(const float* c);
 
 /*!
-	pixel to color
+    pixel to color
 */
 void bl_color_from_pixel(float* c,uint32_t pixel);
 
