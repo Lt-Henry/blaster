@@ -73,6 +73,25 @@ int main(int argc,char* argv[])
 
     printf("bl_vec_norm: %.2f\n",value);
 
+    printf("perfomance test:");
+    bl_vec_set(v1,4.0f,0.0f,0.0f,0.0f);
+    
+    float m1[16];
+    float m2[16];
+    float m3[16];
+    
+    bl_mat_rotation_x(m1,1.0f);
+    bl_mat_rotation_y(m2,1.0f);
+    
+    for (int n=0;n<0xffffff;n++) {
+        bl_mat_mult(m3,m1,m2);
+        bl_vec_mult(v2,v1,m3);
+    }
+
+
+    printf("0 ms\n");
+    value=bl_vec_norm(v2);
+    printf("distance: %.2f\n",value);
     
     printf("\ntesting tga module:\n");
 
