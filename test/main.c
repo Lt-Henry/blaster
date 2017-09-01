@@ -17,12 +17,23 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
+#define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
+#include <time.h>
 #include <blaster/color.h>
 #include <blaster/math.h>
 #include <blaster/tga.h>
 #include <blaster/texture.h>
+
+
+
+uint64_t get_ms(struct timespec start,struct timespec end) {
+    uint64_t sec=((end.tv_sec - start.tv_sec) * 1000);
+    uint64_t nsec=((end.tv_nsec - start.tv_nsec) / 1000000);
+
+    return sec+nsec;
+}
 
 int main(int argc,char* argv[])
 {
@@ -83,13 +94,18 @@ int main(int argc,char* argv[])
     bl_mat_rotation_x(m1,1.0f);
     bl_mat_rotation_y(m2,1.0f);
     
+    struct timespec start,end;
+    
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    
     for (int n=0;n<0xffffff;n++) {
         bl_mat_mult(m3,m1,m2);
         bl_vec_mult(v2,v1,m3);
     }
+    
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
-
-    printf("0 ms\n");
+    printf("%ld ms\n",get_ms(start,end));
     value=bl_vec_norm(v2);
     printf("distance: %.2f\n",value);
     
