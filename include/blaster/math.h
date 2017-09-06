@@ -36,6 +36,11 @@ void bl_vec_set(float* v,float x,float y,float z,float w);
 void bl_vec_copy(float* d,float* s);
 
 /*!
+    Invert vector
+*/
+void bl_vec_invert(float* v);
+
+/*!
     Adds vectors
 */
 void bl_vec_add(float* r,float* a,float* b);
@@ -98,22 +103,22 @@ void bl_mat_identity(float* m);
 /*!
     Sets translation matrix
 */
-void bl_mat_translation(float* m,float x,float y,float z);
+void bl_mat_translate(float* m,float x,float y,float z);
 
 /*!
     Sets rotation matrix over X
 */
-void bl_mat_rotation_x(float* m,float rads);
+void bl_mat_rotate_x(float* m,float rads);
 
 /*!
     Sets rotation matrix over Y
 */
-void bl_mat_rotation_y(float* m,float rads);
+void bl_mat_rotate_y(float* m,float rads);
 
 /*!
     Sets rotation matrix over Z
 */
-void bl_mat_rotation_z(float* m,float rads);
+void bl_mat_rotate_z(float* m,float rads);
 
 /*!
     Sets a scale matrix

@@ -37,6 +37,14 @@ void bl_vec_copy(float* d,float* s)
     d[3]=s[3];
 }
 
+void bl_vec_invert(float* v)
+{
+    v[0]=-v[0];
+    v[1]=-v[1];
+    v[2]=-v[2];
+    v[3]=-v[3];
+}
+
 void bl_vec_add(float* r,float* a,float* b)
 {
     r[0]=a[0]+b[0];
@@ -153,7 +161,7 @@ void bl_mat_identity(float* m)
     m[15]=1.0f;
 }
 
-void bl_mat_translation(float* m,float x,float y,float z)
+void bl_mat_translate(float* m,float x,float y,float z)
 {
     m[0]=1.0f;
     m[1]=0.0f;
@@ -176,7 +184,7 @@ void bl_mat_translation(float* m,float x,float y,float z)
     m[15]=1.0f;
 }
 
-void bl_mat_rotation_x(float* m,float rads)
+void bl_mat_rotate_x(float* m,float rads)
 {
     m[0]=1.0f;
     m[1]=0.0f;
@@ -199,7 +207,7 @@ void bl_mat_rotation_x(float* m,float rads)
     m[15]=1.0f;
 }
 
-void bl_mat_rotation_y(float* m,float rads)
+void bl_mat_rotate_y(float* m,float rads)
 {
     m[0]=cos(rads);
     m[1]=0.0f;
@@ -222,7 +230,7 @@ void bl_mat_rotation_y(float* m,float rads)
     m[15]=1.0f;
 }
 
-void bl_mat_rotation_z(float* m,float rads)
+void bl_mat_rotate_z(float* m,float rads)
 {
     m[0]=cos(rads);
     m[1]=sin(rads);

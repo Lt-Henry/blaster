@@ -91,8 +91,8 @@ int main(int argc,char* argv[])
     float m2[16];
     float m3[16];
     
-    bl_mat_rotation_x(m1,1.0f);
-    bl_mat_rotation_y(m2,1.0f);
+    bl_mat_rotate_x(m1,1.0f);
+    bl_mat_rotate_y(m2,1.0f);
     
     struct timespec start,end;
     
