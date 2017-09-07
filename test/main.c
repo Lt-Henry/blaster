@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <blaster/color.h>
-#include <blaster/math.h>
+#include <blaster/vector.h>
+#include <blaster/matrix.h>
+#include <blaster/matrix_stack.h>
 #include <blaster/tga.h>
 #include <blaster/texture.h>
 
@@ -66,47 +68,47 @@ int main(int argc,char* argv[])
     
     float value;
     
-    printf("\ntesting math module:\n\n");
+    printf("\ntesting vector and matrix modules:\n\n");
     
-    bl_vec_set(v1,0.0f,1.0f,0.0f,1.0f);
-    bl_vec_set(v2,1.0f,0.0f,1.0f,0.0f);
+    bl_vector_set(v1,0.0f,1.0f,0.0f,1.0f);
+    bl_vector_set(v2,1.0f,0.0f,1.0f,0.0f);
     
-    bl_vec_add(v3,v1,v2);
+    bl_vector_add(v3,v1,v2);
     
-    printf("bl_vec_add: %.2f %.2f %.2f %.2f\n",v3[0],v3[1],v3[2],v3[3]);
+    printf("bl_vector_add: %.2f %.2f %.2f %.2f\n",v3[0],v3[1],v3[2],v3[3]);
     
-    bl_vec_set(v1,2.0f,2.0f,2.0f,0.0f);
-    bl_vec_normalize (v1);
+    bl_vector_set(v1,2.0f,2.0f,2.0f,0.0f);
+    bl_vector_normalize (v1);
 
-    printf("bl_vec_normalize: %.2f %.2f %.2f %.2f\n",v1[0],v1[1],v1[2],v1[3]);
+    printf("bl_vector_normalize: %.2f %.2f %.2f %.2f\n",v1[0],v1[1],v1[2],v1[3]);
     
-    value=bl_vec_norm(v1);
+    value=bl_vector_norm(v1);
 
-    printf("bl_vec_norm: %.2f\n",value);
+    printf("bl_vector_norm: %.2f\n",value);
 
     printf("perfomance test:");
-    bl_vec_set(v1,4.0f,0.0f,0.0f,0.0f);
+    bl_vector_set(v1,4.0f,0.0f,0.0f,0.0f);
     
     float m1[16];
     float m2[16];
     float m3[16];
     
-    bl_mat_rotate_x(m1,1.0f);
-    bl_mat_rotate_y(m2,1.0f);
+    bl_matrix_rotate_x(m1,1.0f);
+    bl_matrix_rotate_y(m2,1.0f);
     
     struct timespec start,end;
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     
     for (int n=0;n<0xffffff;n++) {
-        bl_mat_mult(m3,m1,m2);
-        bl_vec_mult(v2,v1,m3);
+        bl_matrix_mult(m3,m1,m2);
+        bl_vector_mult(v2,v1,m3);
     }
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
     printf("%ld ms\n",get_ms(start,end));
-    value=bl_vec_norm(v2);
+    value=bl_vector_norm(v2);
     printf("distance: %.2f\n",value);
     
     printf("\ntesting tga module:\n");

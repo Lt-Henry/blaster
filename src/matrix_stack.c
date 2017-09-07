@@ -18,7 +18,7 @@
 */
 
 #include <blaster/matrix_stack.h>
-#include <blaster/math.h>
+#include <blaster/matrix.h>
 
 #include <stdlib.h>
 
@@ -46,7 +46,7 @@ int bl_matrix_stack_push(bl_matrix_stack_t* stack)
         return 0;
     }
     
-    bl_mat_copy(stack->matrix+16,stack->matrix);
+    bl_matrix_copy(stack->matrix+16,stack->matrix);
     
     stack->index++;
     stack->matrix+=16;
@@ -68,15 +68,15 @@ int bl_matrix_stack_pop(bl_matrix_stack_t* stack)
 
 void bl_matrix_stack_load_identity(bl_matrix_stack_t* stack)
 {
-    bl_mat_identity(stack->matrix);
+    bl_matrix_identity(stack->matrix);
 }
 
 void bl_matrix_stack_mult(bl_matrix_stack_t* stack,float* m)
 {
     float a[16];
 
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_mult(stack->matrix,a,m);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_mult(stack->matrix,a,m);
 }
 
 void bl_matrix_stack_translate(bl_matrix_stack_t* stack,float x,float y,float z)
@@ -84,10 +84,10 @@ void bl_matrix_stack_translate(bl_matrix_stack_t* stack,float x,float y,float z)
     float a[16];
     float b[16];
     
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_translate(b,x,y,z);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_translate(b,x,y,z);
     
-    bl_mat_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,a,b);
 }
 
 void bl_matrix_stack_rotate_x(bl_matrix_stack_t* stack,float angle)
@@ -95,10 +95,10 @@ void bl_matrix_stack_rotate_x(bl_matrix_stack_t* stack,float angle)
     float a[16];
     float b[16];
     
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_rotate_x(b,angle);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_rotate_x(b,angle);
     
-    bl_mat_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,a,b);
 }
 
 void bl_matrix_stack_rotate_y(bl_matrix_stack_t* stack,float angle)
@@ -106,10 +106,10 @@ void bl_matrix_stack_rotate_y(bl_matrix_stack_t* stack,float angle)
     float a[16];
     float b[16];
     
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_rotate_y(b,angle);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_rotate_y(b,angle);
     
-    bl_mat_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,a,b);
 }
 
 void bl_matrix_stack_rotate_z(bl_matrix_stack_t* stack,float angle)
@@ -117,10 +117,10 @@ void bl_matrix_stack_rotate_z(bl_matrix_stack_t* stack,float angle)
     float a[16];
     float b[16];
     
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_rotate_z(b,angle);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_rotate_z(b,angle);
     
-    bl_mat_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,a,b);
 }
 
 void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z)
@@ -128,9 +128,9 @@ void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z)
     float a[16];
     float b[16];
     
-    bl_mat_copy(a,stack->matrix);
-    bl_mat_scale(b,x,y,z);
+    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_scale(b,x,y,z);
     
-    bl_mat_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,a,b);
 
 }
