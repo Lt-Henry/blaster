@@ -58,9 +58,11 @@ void bl_tga_save(bl_texture_t* texture, const char* filename)
     
     int img_size=header.width*header.height;
     
+    uint32_t* data = texture->data;
+    
     for (int n=0;n<img_size;n++) {
         //data is stored as BGRA
-        uint32_t pixel=texture->data[n];
+        uint32_t pixel=data[n];
         
         uint32_t argb=  ((pixel & 0x000000ff)<<16) |
                         ((pixel & 0x0000ff00)) |

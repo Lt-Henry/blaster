@@ -17,30 +17,58 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <blaster/constants.h>
 #include <blaster/texture.h>
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-bl_texture_t* bl_texture_new(int width,int height)
+static uint8_t bl_texture_get_bpp(uint8_t type)
+{
+    switch (type) {
+        case BL_TEXTURE_U8:
+            return 1;
+        break;
+        
+        case BL_TEXTURE_U16:
+            return 2;
+        break;
+        
+        case BL_TEXTURE_U32:
+        case BL_TEXTURE_F32:
+            return 4;
+        break;
+        
+        case BL_TEXTURE_F64:
+            return 8;
+        break;
+        
+        default:
+            return 0; //bad thing may happen
+    }
+}
+
+bl_texture_t* bl_texture_new(int width,int height,uint8_t type)
 {
     bl_texture_t* texture = NULL;
 
     texture = malloc(sizeof(bl_texture_t));
 
-    texture->data=malloc(sizeof(uint32_t)*width*height);
+    texture->type=type;
+    texture->bpp=bl_texture_get_bpp(type);
+    
+    texture->data=malloc(texture->bpp*width*height);
     texture->width=width;
     texture->height=height;
 
     return texture;
 }
 
-bl_texture_t* bl_texture_new_from_data(int width,int height,const void* data)
+bl_texture_t* bl_texture_new_from_data(int width,int height,uint8_t type,const void* data)
 {
-    bl_texture_t* texture = bl_texture_new(width,height);
-    memcpy((void*)texture->data,data,sizeof(uint32_t)*width*height);
+    bl_texture_t* texture = bl_texture_new(width,height,type);
+    memcpy((void*)texture->data,data,texture->bpp*width*height);
 
     return texture;
 }
@@ -53,10 +81,12 @@ void bl_texture_delete(bl_texture_t* t)
 
 void bl_texture_set_pixel(bl_texture_t* t,int x,int y,uint32_t pixel)
 {
-    t->data[x+y*t->width]=pixel;
+    uint32_t* ptr=t->data;
+    ptr[x+y*t->width]=pixel;
 }
 
 uint32_t bl_texture_get_pixel(bl_texture_t* t,int x,int y)
 {
-    return t->data[x+y*t->width];
+    uint32_t* ptr=t->data;
+    return ptr[x+y*t->width];
 }

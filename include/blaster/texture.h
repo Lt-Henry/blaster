@@ -28,21 +28,24 @@ extern "C" {
 
 typedef struct {
 
-    int width;
-    int height;
-    uint32_t* data;
+    int width; /*! width in pixels */
+    int height; /*! height in pixels */
+    uint8_t type; /*! texture type (see constants.h) */
+    uint8_t bpp; /*! Bytes per pixel (1,2,4) */
+    
+    void* data;
 
 } bl_texture_t;
 
 /*!
     Creates a new texture
 */
-bl_texture_t* bl_texture_new(int width,int height);
+bl_texture_t* bl_texture_new(int width,int height, uint8_t type);
 
 /*!
     Creates a new texture from with data copied inside
 */
-bl_texture_t* bl_texture_new_from_data(int width,int height,const void* data);
+bl_texture_t* bl_texture_new_from_data(int width,int height,uint8_t type,const void* data);
 
 /*!
     Free a texture 

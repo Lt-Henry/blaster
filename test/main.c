@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <blaster/constants.h>
 #include <blaster/color.h>
 #include <blaster/vector.h>
 #include <blaster/matrix.h>
@@ -115,7 +116,7 @@ int main(int argc,char* argv[])
 
     bl_texture_t* texture;
     
-    texture = bl_texture_new(800,600);
+    texture = bl_texture_new(800,600,BL_TEXTURE_U32);
     
     bl_color_set(c1,0.0f,0.0f,0.0f,1.0f);
     

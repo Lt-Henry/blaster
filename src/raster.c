@@ -1,133 +1,109 @@
 /*
-	blaster
-	
-	Copyright (C) 2016  Enrique Medina Gremaldos <quiqueiii@gmail.com>
+    blaster
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    Copyright (C) 2016  Enrique Medina Gremaldos <quiqueiii@gmail.com>
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <blaster/raster.h>
 #include <blaster/constants.h>
+#include <blaster/color.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
 
-static void bl_raster_clean_tiles(bl_raster_t* raster)
+bl_raster_t* bl_raster_new(int width,int height)
 {
-	int N=raster->tiles_width*raster->tiles_height;
-	
-	for (int n=0;n<N;n++) {
-		bl_tile_delete(raster->tiles[n]);
-	}
+    bl_raster_t* raster;
 
-	free(raster->tiles);
+    raster=malloc(sizeof(bl_raster_t));
 
-}
+    raster->screen_width=width;
+    raster->screen_height=height;
 
-bl_raster_t* bl_raster_new()
-{
-	bl_raster_t* raster;
-	
-	raster=malloc(sizeof(bl_raster_t));
-	
-	raster->tiles_width=0;
-	raster->tiles_height=0;
-	raster->tiles=NULL;
-	
-	raster->cmd_queue = bl_command_buffer_new(1024);
-	
-	return raster;
+    raster->color_buffer=bl_texture_new(width,height,BL_TEXTURE_U32);
+    raster->depth_buffer=bl_texture_new(width,height,BL_TEXTURE_U16);
+    
+    raster->modelview=bl_matrix_stack_new(32);
+    raster->projection=bl_matrix_stack_new(32);
+    
+    bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
+
+    return raster;
 }
 
 void bl_raster_delete(bl_raster_t* raster)
 {
-	bl_command_buffer_delete(raster->cmd_queue);
-	
-	bl_raster_clean_tiles(raster);
-	free(raster);
+
+    bl_texture_delete(raster->color_buffer);
+    bl_texture_delete(raster->depth_buffer);
+    
+    bl_matrix_stack_delete(raster->modelview);
+    bl_matrix_stack_delete(raster->projection);
+
+    free(raster);
 }
 
 void bl_raster_resize(bl_raster_t* raster,int width,int height)
 {
-	bl_raster_clean_tiles(raster);
-	
-	// compute number of tiles and real size (which may be smaller than requested)
-	raster->tiles_width=width/BL_TILE_SIZE;
-	raster->tiles_height=height/BL_TILE_SIZE;
-	
-	raster->screen_width=raster->tiles_width*BL_TILE_SIZE;
-	raster->screen_height=raster->tiles_height*BL_TILE_SIZE;
-	
-	raster->tiles=malloc(sizeof(bl_tile_t*)*raster->tiles_width*raster->tiles_height);
-	
-	for (int j=0;j<raster->tiles_height;j++) {
-		for (int i=0;i<raster->tiles_width;i++) {
-			int index = i+j*raster->tiles_width;
-			
-			int x=i*BL_TILE_SIZE;
-			int y=j*BL_TILE_SIZE;
+    bl_texture_delete(raster->color_buffer);
+    bl_texture_delete(raster->depth_buffer);
+    
+    raster->screen_width=width;
+    raster->screen_height=height;
 
-			raster->tiles[index]=bl_tile_new(x,y,BL_TILE_SIZE,BL_TILE_SIZE);
-		}
-	}
+    raster->color_buffer=bl_texture_new(width,height,BL_TEXTURE_U32);
+    raster->depth_buffer=bl_texture_new(width,height,BL_TEXTURE_U16);
 }
 
-void bl_raster_set_clear_color(bl_raster_t* raster,uint32_t color)
+void bl_raster_set_clear_color(bl_raster_t* raster,float* color)
 {
-	bl_command_t cmd;
-	
-	cmd.type=BL_CMD_CLEAR_COLOR;
-	cmd.clear_color.color=color;
-	
-	bl_raster_cmd_queue(raster,cmd);
+    clear_color[0]=color[0];
+    clear_color[1]=color[1];
+    clear_color[2]=color[2];
+    clear_color[3]=color[3];
 }
 
 void bl_raster_clear(bl_raster_t* raster)
 {
-	bl_command_t cmd;
-	
-	cmd.type=BL_CMD_CLEAR;
-	
-	int num_tiles=raster->tiles_width*raster->tiles_height;
-	
-	for (int n=0;n<num_tiles;n++) {
-		cmd.clear.tile=raster->tiles[n];
-		bl_raster_cmd_queue(raster,cmd);
-	}
+    uint32_t pixel=bl_color_get_pixel(raster->clear_color);
+    
+    uint32_t* color = color_buffer->data;
+    uint16_t* depth = depth_buffer->data;
+    
+    for (int j=0;j<raster->height;j++) {
+        for (int i=0;i<raster->width;i++) {
+            color[i+j*raster->width]=pixel;
+            depth[i+j*raster->width]=0xFFFF;
+        }
+    }
 }
 
 void bl_raster_update(bl_raster_t* raster)
 {
-	while (raster->cmd_size>0) {
-		bl_command_t cmd = bl_raster_cmd_dequeue(raster);
-		
-		switch (cmd.type) {
-			case BL_CMD_CLEAR:
-				bl_tile_clear(cmd.clear.tile,0xffdedede,0xffff);
-			break;
-		}
-	}
+
 }
 
 int bl_raster_get_width(bl_raster_t* raster)
 {
-	return raster->screen_width;
+    return raster->screen_width;
 }
 
 int bl_raster_get_height(bl_raster_t* raster)
 {
-	return raster->screen_height;
+    return raster->screen_height;
 }
 
