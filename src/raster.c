@@ -71,23 +71,23 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
 
 void bl_raster_set_clear_color(bl_raster_t* raster,float* color)
 {
-    clear_color[0]=color[0];
-    clear_color[1]=color[1];
-    clear_color[2]=color[2];
-    clear_color[3]=color[3];
+    raster->clear_color[0]=color[0];
+    raster->clear_color[1]=color[1];
+    raster->clear_color[2]=color[2];
+    raster->clear_color[3]=color[3];
 }
 
 void bl_raster_clear(bl_raster_t* raster)
 {
     uint32_t pixel=bl_color_get_pixel(raster->clear_color);
     
-    uint32_t* color = color_buffer->data;
-    uint16_t* depth = depth_buffer->data;
+    uint32_t* color = raster->color_buffer->data;
+    uint16_t* depth = raster->depth_buffer->data;
     
-    for (int j=0;j<raster->height;j++) {
-        for (int i=0;i<raster->width;i++) {
-            color[i+j*raster->width]=pixel;
-            depth[i+j*raster->width]=0xFFFF;
+    for (int j=0;j<raster->screen_height;j++) {
+        for (int i=0;i<raster->screen_width;i++) {
+            color[i+j*raster->screen_width]=pixel;
+            depth[i+j*raster->screen_width]=0xFFFF;
         }
     }
 }

@@ -32,6 +32,8 @@ bl_matrix_stack_t* bl_matrix_stack_new(int size)
     stack->base=malloc(sizeof(float)*16*size);
     stack->index=0;
     stack->matrix=stack->base;
+    
+    return stack;
 }
 
 void bl_matrix_stack_delete(bl_matrix_stack_t* stack)

@@ -66,6 +66,11 @@ uint32_t bl_color_get_pixel(const float* c);
 */
 void bl_color_from_pixel(float* c,uint32_t pixel);
 
+/*!
+    create color from bytes
+*/
+void bl_color_from_ub(float* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+
 #ifdef __cplusplus
 }
 #endif

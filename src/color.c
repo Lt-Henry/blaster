@@ -115,3 +115,10 @@ void bl_color_from_pixel(float* c,uint32_t pixel)
     c[3]*=rc;
 }
 
+void bl_color_from_ub(float* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a)
+{
+    c[0]=r/255.0f;
+    c[1]=g/255.0f;
+    c[2]=b/255.0f;
+    c[3]=a/255.0f;
+}

@@ -22,7 +22,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <blaster/constants.h>
+#include <blaster/raster.h>
 #include <blaster/color.h>
+#include <blaster/vbo.h>
 #include <blaster/vector.h>
 #include <blaster/matrix.h>
 #include <blaster/matrix_stack.h>
@@ -112,29 +114,25 @@ int main(int argc,char* argv[])
     value=bl_vector_norm(v2);
     printf("distance: %.2f\n",value);
     
-    printf("\ntesting tga module:\n");
-
-    bl_texture_t* texture;
+    printf("\ntesting raster:\n");
     
-    texture = bl_texture_new(800,600,BL_TEXTURE_U32);
+    bl_raster_t* raster = bl_raster_new(1024,768);
     
-    bl_color_set(c1,0.0f,0.0f,0.0f,1.0f);
+    //100 vertices with 12 attributes (pos,norm,color)
+    bl_vbo_t* triangles = bl_vbo_new(100,12);
     
-    for (int j=0;j<600;j++) {
-        for (int i=0;i<800;i++) {
-            float u = i/800.0f;
-            float v = j/600.0f;
-            
-            c1[0]=u;
-            c1[1]=v;
-            
-            uint32_t pixel = bl_color_get_pixel(c1);
-            bl_texture_set_pixel(texture,i,j,pixel);
-        }
-    }
+    //set background color (#839496)
+    bl_color_from_ub(c1,0x83,0x94,0x96,0xff);
+    bl_raster_set_clear_color(raster,c1);
     
-    bl_tga_save(texture,"out.tga");
-    bl_texture_delete(texture);
+    //clear
+    bl_raster_clear(raster);
+    
+    //save output
+    bl_tga_save(raster->color_buffer,"color.tga");
+    
+    bl_vbo_delete(triangles);
+    bl_raster_delete(raster);
 
     return 0;
 }

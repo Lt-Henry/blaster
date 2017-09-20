@@ -58,7 +58,7 @@ void bl_vbo_add(bl_vbo_t* vbo,...)
     va_start(args,vbo);
     
     for (int n=0;n<vbo->attributes;n++) {
-        ptr[n]=va_arg(args,float);
+        ptr[n]=(float)va_arg(args,double);
     }
     
     va_end(args);
