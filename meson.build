@@ -1,5 +1,5 @@
 project('Blaster software rasterizer','c')
 
-headers=include_directories('include')
+blaster_headers=include_directories('include')
 subdir('src')
-subdir('test')
+#subdir('test')

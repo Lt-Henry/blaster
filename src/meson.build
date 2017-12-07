@@ -5,6 +5,8 @@ libm = gcc.find_library('m')
 
 libblaster=shared_library('blaster', ['vector.c','matrix.c','matrix_stack.c','color.c','texture.c','tga.c','vbo.c','raster.c'],
     c_args:'-std=c11',
-    include_directories: headers,
+    include_directories: blaster_headers,
     dependencies: libm
     )
+    
+blaster=declare_dependency(link_with:libblaster,include_directories: blaster_headers)
