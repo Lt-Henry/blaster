@@ -88,6 +88,15 @@ void bl_matrix_stack_rotate_z(bl_matrix_stack_t* stack,float angle);
 */
 void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z);
 
+/*!
+
+*/
+void bl_matrix_stack_frustum(bl_matrix_stack_t* stack,
+                            float left,float right,
+                            float top, float bottom,
+                            float near,float far
+                            );
+
 #ifdef __cplusplus
 }
 #endif

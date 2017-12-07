@@ -31,6 +31,7 @@ extern "C" {
 #include "texture.h"
 #include "matrix.h"
 #include "matrix_stack.h"
+#include "vbo.h"
 
 /*!
     Raster main structure
@@ -57,6 +58,8 @@ typedef struct {
     
     /*! color used for clear */
     float clear_color[4];
+    
+    float* buffer;
 
 } bl_raster_t;
 
@@ -91,14 +94,19 @@ void bl_raster_clear(bl_raster_t* raster);
 void bl_raster_update(bl_raster_t* raster);
 
 /*!
-    Get width in pixels, which should be a multiple of tiles_width
+    Get width in pixels
 */
 int bl_raster_get_width(bl_raster_t* raster);
 
 /*!
-    Get height in pixels, which should be a multiple of tiles_height
+    Get height in pixels
 */
 int bl_raster_get_height(bl_raster_t* raster);
+
+/*!
+    Draws a vertex buffer
+*/
+void bl_raster_draw(bl_raster_t* raster, bl_vbo_t* vbo);
 
 #ifdef __cplusplus
 }

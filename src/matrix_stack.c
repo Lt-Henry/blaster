@@ -136,3 +136,38 @@ void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z)
     bl_matrix_mult(stack->matrix,a,b);
 
 }
+
+void bl_matrix_stack_frustum(bl_matrix_stack_t* stack,
+                            float left,float right,
+                            float top, float bottom,
+                            float near,float far
+                            )
+{
+    float a[16];
+    float b[16];
+    
+    bl_matrix_copy(a,stack->matrix);
+    
+    b[0]=(2.0f*near)/(right-left);
+    b[1]=0.0f;
+    b[2]=0.0f;
+    b[3]=0.0f;
+    
+    b[4]=0.0f;
+    b[5]=(2.0f*near)/(top-bottom);
+    b[6]=0.0f;
+    b[7]=0.0f;
+    
+    b[8]=(right+left)/(right-left);
+    b[9]=(top+bottom)/(top-bottom);
+    b[10]=-(far+near)/(far-near);
+    b[11]=-1;
+    
+    b[12]=0.0f;
+    b[13]=0.0f;
+    b[14]=-(2.0f*far*near)/(far-near);
+    b[15]=0.0f;
+    
+    bl_matrix_mult(stack->matrix,a,b);
+}
+

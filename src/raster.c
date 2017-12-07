@@ -20,6 +20,8 @@
 #include <blaster/raster.h>
 #include <blaster/constants.h>
 #include <blaster/color.h>
+#include <blaster/vector.h>
+#include <blaster/matrix.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +43,8 @@ bl_raster_t* bl_raster_new(int width,int height)
     raster->projection=bl_matrix_stack_new(32);
     
     bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
+    
+    raster->buffer=malloc(sizeof(float)*4096);
 
     return raster;
 }
@@ -54,6 +58,7 @@ void bl_raster_delete(bl_raster_t* raster)
     bl_matrix_stack_delete(raster->modelview);
     bl_matrix_stack_delete(raster->projection);
 
+    free(raster->buffer);
     free(raster);
 }
 
@@ -107,3 +112,44 @@ int bl_raster_get_height(bl_raster_t* raster)
     return raster->screen_height;
 }
 
+void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
+{
+
+    // point rendering
+
+    float eye[4];
+    float clip[4];
+    float ndc[4];
+    int32_t window[4];
+
+    float* source = vbo->data;
+    float* target = raster->buffer;
+    
+    size_t inc=vbo->attributes;
+
+    for (int n=0;n<vbo->size;n++) {
+    
+        bl_vector_mult(eye,source,raster->modelview->matrix);
+        
+        bl_vector_mult(clip,eye,raster->projection->matrix);
+        
+        // clip point
+        if (clip[3]<0.0f || clip[3]>1.0f) {
+            source+=inc;
+            continue;
+        }
+        
+        //w-divide
+        
+        float w=clip[3];
+        
+        ndc[0]=clip[0]/w;
+        ndc[1]=clip[1]/w;
+        ndc[2]=clip[2]/w;
+        ndc[3]=clip[3]/w;
+        
+    
+        source+=inc;
+        target+=inc;
+    }
+}
