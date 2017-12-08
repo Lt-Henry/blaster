@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
+
 #include <blaster/constants.h>
 #include <blaster/raster.h>
 #include <blaster/color.h>
@@ -118,8 +120,16 @@ int main(int argc,char* argv[])
     
     bl_raster_t* raster = bl_raster_new(1024,768);
     
-    //100 vertices with 12 attributes (pos,norm,color)
-    bl_vbo_t* triangles = bl_vbo_new(100,12);
+    //1000 vertices with 8 attributes (pos,color)
+    bl_vbo_t* points = bl_vbo_new(1000,8);
+    
+    for (int n=0;n<1000;n++) {
+        float x = cos(n);
+        float y = sin(n);
+        float z= 10.0f+n;
+        bl_vbo_add(points,x,y,z,1.0f,1.0f,0.0f,0.0f,1.0f);
+    }
+    
     
     //set background color (#839496)
     bl_color_from_ub(c1,0x83,0x94,0x96,0xff);
@@ -128,10 +138,21 @@ int main(int argc,char* argv[])
     //clear
     bl_raster_clear(raster);
     
+    bl_matrix_stack_load_identity(raster->modelview);
+    bl_matrix_stack_load_identity(raster->projection);
+    bl_matrix_stack_frustum(raster->projection,-1,1,-1,1,10,100);
+    
+    bl_raster_draw(raster,points);
+    
+    for (int n=0;n<points->size;n++) {
+        float* p=points->data+(points->attributes*n);
+        //printf("zw %.2f %.2f\n",p[2],p[3]);
+    }
+    
     //save output
     bl_tga_save(raster->color_buffer,"color.tga");
     
-    bl_vbo_delete(triangles);
+    bl_vbo_delete(points);
     bl_raster_delete(raster);
 
     return 0;

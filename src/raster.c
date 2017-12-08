@@ -120,25 +120,30 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     float eye[4];
     float clip[4];
     float ndc[4];
-    int32_t window[4];
+    float window[4];
 
     float* source = vbo->data;
     float* target = raster->buffer;
     
     size_t inc=vbo->attributes;
-
+    
+    printf("vbo %d\n",vbo->size);
+    printf("inc %d\n",inc);
     for (int n=0;n<vbo->size;n++) {
     
+        source=&(vbo->data[n*inc]);
+        
         bl_vector_mult(eye,source,raster->modelview->matrix);
         
         bl_vector_mult(clip,eye,raster->projection->matrix);
         
         // clip point
+        /*
         if (clip[3]<0.0f || clip[3]>1.0f) {
             source+=inc;
             continue;
         }
-        
+        */
         //w-divide
         
         float w=clip[3];
@@ -148,8 +153,24 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         ndc[2]=clip[2]/w;
         ndc[3]=clip[3]/w;
         
+        int x=ndc[0]*raster->screen_width;
+        int y=ndc[1]*raster->screen_height;
+        
+        printf("point: %d %.2f %.2f %.2f %.2f\n",n,
+            ndc[0],ndc[1],ndc[2],ndc[3]);
+            //clip[0],clip[1],clip[2],clip[3]);
+            //eye[0],eye[1],eye[2],eye[3]);
+        
+        if (x<0 || x>=raster->screen_width || y<0 || y>=raster->screen_height) {
+            continue;
+        }
     
-        source+=inc;
-        target+=inc;
+        uint32_t pixel=0xff0000ff;
+    
+        bl_texture_set_pixel(raster->color_buffer,
+            x,y,
+            pixel
+        );
+    
     }
 }
