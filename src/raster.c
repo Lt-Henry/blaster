@@ -120,15 +120,20 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     float eye[4];
     float clip[4];
     float ndc[4];
-    float window[4];
+    int win[4];
 
-    float* source = vbo->data;
-    float* target = raster->buffer;
+    float* source ;
     
     size_t inc=vbo->attributes;
     
-    printf("vbo %d\n",vbo->size);
-    printf("inc %d\n",inc);
+    float wl[4];
+    
+    wl[0]=raster->screen_width/2.0f;
+    wl[1]=raster->screen_height/2.0f;
+    wl[2]=65535/2.0f;
+        
+    //printf("vbo %d\n",vbo->size);
+    //printf("inc %d\n",inc);
     for (int n=0;n<vbo->size;n++) {
     
         source=&(vbo->data[n*inc]);
@@ -153,13 +158,11 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         }
         
         // viewport
-        float w2=raster->screen_width/2.0f;
-        float h2=raster->screen_height/2.0f;
-        float z2=65535/2.0f;
         
-        int x=(ndc[0]*w2)+w2;
-        int y=(ndc[1]*h2)+h2;
-        int z=(ndc[2]*z2)+z2;
+        
+        win[0]=(ndc[0]*wl[0])+wl[0];
+        win[1]=(ndc[1]*wl[1])+wl[1];
+        win[2]=(ndc[2]*wl[2])+wl[2];
         
         /*
         printf("clip %.2f %.2f %.2f %.2f\n",
@@ -170,16 +173,24 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         */
         
         //clip out of viewport
-        if (x<0 || x>=raster->screen_width || y<0 || y>=raster->screen_height) {
+        if (win[0]<0 || win[0]>=raster->screen_width
+         || win[1]<0 || win[1]>=raster->screen_height) {
             continue;
         }
     
-        uint32_t pixel=0xff0000ff;
+        uint16_t* zbuffer=raster->depth_buffer->data+(win[0]+win[1]*raster->screen_width);
     
-        bl_texture_set_pixel(raster->color_buffer,
-            x,y,
-            pixel
-        );
+        if (win[2]<*zbuffer) {
+            uint32_t pixel=bl_color_get_pixel(source+4);
+    
+            bl_texture_set_pixel(raster->color_buffer,
+                win[0],win[1],
+                pixel
+            );
+            
+            *zbuffer=win[2];
+        }
+        
     
     }
 }
