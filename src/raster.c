@@ -133,19 +133,13 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     
         source=&(vbo->data[n*inc]);
         
+        // eye coordinates
         bl_vector_mult(eye,source,raster->modelview->matrix);
         
+        //clip coordinates
         bl_vector_mult(clip,eye,raster->projection->matrix);
         
-        // clip point
-        /*
-        if (clip[3]<0.0f || clip[3]>1.0f) {
-            source+=inc;
-            continue;
-        }
-        */
-        //w-divide
-        
+        //w-divide for NDC coordinates
         float w=clip[3];
         
         ndc[0]=clip[0]/w;
@@ -153,14 +147,29 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         ndc[2]=clip[2]/w;
         ndc[3]=clip[3]/w;
         
-        int x=ndc[0]*raster->screen_width;
-        int y=ndc[1]*raster->screen_height;
+        //clip out of range z
+        if (ndc[2]<-1.0f || ndc[2]>1.0f) {
+            continue;
+        }
         
-        printf("point: %d %.2f %.2f %.2f %.2f\n",n,
+        // viewport
+        float w2=raster->screen_width/2.0f;
+        float h2=raster->screen_height/2.0f;
+        float z2=65535/2.0f;
+        
+        int x=(ndc[0]*w2)+w2;
+        int y=(ndc[1]*h2)+h2;
+        int z=(ndc[2]*z2)+z2;
+        
+        /*
+        printf("clip %.2f %.2f %.2f %.2f\n",
+            clip[0],clip[1],clip[2],clip[3]);
+        printf("ndc %.2f %.2f %.2f %.2f\n",
             ndc[0],ndc[1],ndc[2],ndc[3]);
-            //clip[0],clip[1],clip[2],clip[3]);
-            //eye[0],eye[1],eye[2],eye[3]);
+        printf("window %d %d %d\n\n",x,y,z);
+        */
         
+        //clip out of viewport
         if (x<0 || x>=raster->screen_width || y<0 || y>=raster->screen_height) {
             continue;
         }

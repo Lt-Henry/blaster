@@ -123,10 +123,14 @@ int main(int argc,char* argv[])
     //1000 vertices with 8 attributes (pos,color)
     bl_vbo_t* points = bl_vbo_new(1000,8);
     
+    double alpha=0.0;
+    float step=0.0f;
     for (int n=0;n<1000;n++) {
-        float x = cos(n);
-        float y = sin(n);
-        float z= 10.0f+n;
+        float x = cos(alpha);
+        float y = sin(alpha);
+        float z= -(10.0f+step);
+        alpha+=0.1;
+        step+=0.1f;
         bl_vbo_add(points,x,y,z,1.0f,1.0f,0.0f,0.0f,1.0f);
     }
     
