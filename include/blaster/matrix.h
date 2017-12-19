@@ -75,6 +75,11 @@ void bl_matrix_scale(float* m,float x,float y,float z);
 */
 void bl_matrix_mult(float* m,float* a,float* b);
 
+/*!
+    Print matrix to stdout
+*/
+void bl_matrix_print(const float* m);
+
 #ifdef __cplusplus
 }
 #endif

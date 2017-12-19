@@ -20,6 +20,7 @@
 #include <blaster/matrix.h>
 
 #include <math.h>
+#include <stdio.h>
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 
@@ -95,13 +96,13 @@ void bl_matrix_rotate_x(float* m,float rads)
     m[3]=0.0f;
 
     m[4]=0.0f;
-    m[5]=cos(rads);
-    m[6]=sin(rads);
+    m[5]=cosf(rads);
+    m[6]=sinf(rads);
     m[7]=0.0f;
 
     m[8]=0.0f;
-    m[9]=-sin(rads);
-    m[10]=cos(rads);
+    m[9]=-sinf(rads);
+    m[10]=cosf(rads);
     m[11]=0.0f;
 
     m[12]=0.0f;
@@ -112,9 +113,9 @@ void bl_matrix_rotate_x(float* m,float rads)
 
 void bl_matrix_rotate_y(float* m,float rads)
 {
-    m[0]=cos(rads);
+    m[0]=cosf(rads);
     m[1]=0.0f;
-    m[2]-=sin(rads);
+    m[2]-=sinf(rads);
     m[3]=0.0f;
 
     m[4]=0.0f;
@@ -122,9 +123,9 @@ void bl_matrix_rotate_y(float* m,float rads)
     m[6]=0.0f;
     m[7]=0.0f;
 
-    m[8]=sin(rads);
+    m[8]=sinf(rads);
     m[9]=0.0f;
-    m[10]=cos(rads);
+    m[10]=cosf(rads);
     m[11]=0.0f;
 
     m[12]=0.0f;
@@ -135,13 +136,13 @@ void bl_matrix_rotate_y(float* m,float rads)
 
 void bl_matrix_rotate_z(float* m,float rads)
 {
-    m[0]=cos(rads);
-    m[1]=sin(rads);
+    m[0]=cosf(rads);
+    m[1]=sinf(rads);
     m[2]=0.0f;
     m[3]=0.0f;
 
-    m[4]=-sin(rads);
-    m[5]=cos(rads);
+    m[4]=-sinf(rads);
+    m[5]=cosf(rads);
     m[6]=0.0f;
     m[7]=0.0f;
 
@@ -252,13 +253,13 @@ void bl_matrix_mult(float* m,float* a,float* b)
     __m128 B;
     __m128 R;
     
-    for (int i=0;i<16;i+=4) {
-        R=_mm_set_ps(0,0,0,0);
+    for (size_t i=0;i<16;i+=4) {
+        R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
         
-        
-        for (int j=0;j<4;j++) {
-            A=_mm_loadu_ps(a+(j*4));
-            B=_mm_set_ps(b[i+j],b[i+j],b[i+j],b[i+j]);
+        for (size_t j=0;j<4;j++) {
+            size_t k=j<<2;
+            A=_mm_loadu_ps(a+k);
+            B=_mm_load_ps1(b+i+j);
             
             __m128 Q=_mm_mul_ps(A,B);
             R=_mm_add_ps(R,Q);
@@ -267,4 +268,12 @@ void bl_matrix_mult(float* m,float* a,float* b)
         _mm_store_ps(m+i,R);
     }
 
+}
+
+void bl_matrix_print(const float* m)
+{
+    for (int n=0;n<4;n++) {
+    
+        printf("[%.2f %.2f %.2f %.2f]\n",m[n],m[n+4],m[n+8],m[n+12]);
+    }
 }

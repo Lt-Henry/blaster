@@ -20,6 +20,8 @@
 #include <blaster/vector.h>
 
 #include <math.h>
+#include <xmmintrin.h>
+#include <pmmintrin.h>
 
 void bl_vector_set(float* v,float x,float y,float z,float w)
 {
@@ -112,10 +114,34 @@ void bl_vector_homogeneus(float* v)
 
 void bl_vector_mult(float* r,const float* v,const float* m)
 {
+    /*
     float w[4]={v[0],v[1],v[2],v[3]};
 
     r[0]= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
     r[1]= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
     r[2]= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
     r[3]= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
+    
+    */
+    
+    __m128 V;
+    __m128 M;
+    __m128 R;
+    __m128 Q;
+    
+    
+    R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
+    
+    for (size_t i=0;i<4;i++) {
+        
+        size_t j=i<<2;
+        
+        V=_mm_load_ps1(v+i);
+        M=_mm_loadu_ps(m+j);
+        Q=_mm_mul_ps(V,M);
+        R=_mm_add_ps(R,Q);
+    }
+    
+    _mm_store_ps(r,R);
+    
 }

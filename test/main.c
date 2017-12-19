@@ -91,7 +91,7 @@ int main(int argc,char* argv[])
 
     printf("bl_vector_norm: %.2f\n",value);
 
-    printf("perfomance test:");
+    
     bl_vector_set(v1,4.0f,0.0f,0.0f,0.0f);
     
     float m1[16];
@@ -101,11 +101,20 @@ int main(int argc,char* argv[])
     bl_matrix_rotate_x(m1,1.0f);
     bl_matrix_rotate_y(m2,1.0f);
     
+    printf("m1:\n");
+    bl_matrix_print(m1);
+    printf("m2:\n");
+    bl_matrix_print(m2);
+    printf("m3:\n");
+    bl_matrix_print(m3);
+    
+    printf("perfomance test:");
+    
     struct timespec start,end;
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     
-    for (int n=0;n<0x2ffffff;n++) {
+    for (int n=0;n<0xffffff;n++) {
         bl_matrix_mult(m3,m1,m2);
         bl_vector_mult(v2,v1,m3);
     }
@@ -114,6 +123,9 @@ int main(int argc,char* argv[])
 
     printf("%ld ms\n",get_ms(start,end));
     value=bl_vector_norm(v2);
+    
+    
+    printf("v2: %.2f %.2f %.2f %.2f\n",v2[0],v2[1],v2[2],v2[3]);
     printf("distance: %.2f\n",value);
     
     printf("\ntesting raster:\n");
