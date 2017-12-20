@@ -130,9 +130,12 @@ void bl_vector_mult(float* r,const float* v,const float* m)
     __m128 Q;
     
     
-    R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
-    
-    for (size_t i=0;i<4;i++) {
+    //R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
+    V=_mm_load_ps1(v);
+    M=_mm_loadu_ps(m);
+    R=_mm_mul_ps(V,M);
+        
+    for (size_t i=1;i<4;i++) {
         
         size_t j=i<<2;
         

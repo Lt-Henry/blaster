@@ -100,13 +100,8 @@ int main(int argc,char* argv[])
     
     bl_matrix_rotate_x(m1,1.0f);
     bl_matrix_rotate_y(m2,1.0f);
+    bl_matrix_identity(m3);
     
-    printf("m1:\n");
-    bl_matrix_print(m1);
-    printf("m2:\n");
-    bl_matrix_print(m2);
-    printf("m3:\n");
-    bl_matrix_print(m3);
     
     printf("perfomance test:");
     
@@ -114,7 +109,7 @@ int main(int argc,char* argv[])
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     
-    for (int n=0;n<0xffffff;n++) {
+    for (int n=0;n<0x2ffffff;n++) {
         bl_matrix_mult(m3,m1,m2);
         bl_vector_mult(v2,v1,m3);
     }
@@ -127,6 +122,13 @@ int main(int argc,char* argv[])
     
     printf("v2: %.2f %.2f %.2f %.2f\n",v2[0],v2[1],v2[2],v2[3]);
     printf("distance: %.2f\n",value);
+    
+    printf("m1:\n");
+    bl_matrix_print(m1);
+    printf("m2:\n");
+    bl_matrix_print(m2);
+    printf("m3:\n");
+    bl_matrix_print(m3);
     
     printf("\ntesting raster:\n");
     

@@ -252,16 +252,21 @@ void bl_matrix_mult(float* m,float* a,float* b)
     __m128 A;
     __m128 B;
     __m128 R;
+    __m128 Q;
     
     for (size_t i=0;i<16;i+=4) {
-        R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
+        //R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
+        A=_mm_loadu_ps(a);
+        B=_mm_load_ps1(b+i);
+            
+        R=_mm_mul_ps(A,B);
         
-        for (size_t j=0;j<4;j++) {
+        for (size_t j=1;j<4;j++) {
             size_t k=j<<2;
             A=_mm_loadu_ps(a+k);
             B=_mm_load_ps1(b+i+j);
             
-            __m128 Q=_mm_mul_ps(A,B);
+            Q=_mm_mul_ps(A,B);
             R=_mm_add_ps(R,Q);
         }
         

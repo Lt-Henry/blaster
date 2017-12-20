@@ -33,7 +33,7 @@ bl_vbo_t* bl_vbo_new(size_t size,size_t attributes)
     vbo->capacity=size;
     vbo->size=0;
     vbo->attributes=attributes;
-    vbo->data=malloc(sizeof(float)*size*attributes);
+    vbo->data=aligned_alloc(16,sizeof(float)*size*attributes);
 
     return vbo;
 }

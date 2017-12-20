@@ -25,6 +25,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <emmintrin.h>
+#include <xmmintrin.h>
+#include <pmmintrin.h>
 
 
 bl_raster_t* bl_raster_new(int width,int height)
@@ -85,9 +88,10 @@ void bl_raster_set_clear_color(bl_raster_t* raster,float* color)
 void bl_raster_clear(bl_raster_t* raster)
 {
     uint32_t pixel=bl_color_get_pixel(raster->clear_color);
-    
+    /*
     uint32_t* color = raster->color_buffer->data;
     uint16_t* depth = raster->depth_buffer->data;
+    
     
     for (int j=0;j<raster->screen_height;j++) {
         for (int i=0;i<raster->screen_width;i++) {
@@ -95,6 +99,51 @@ void bl_raster_clear(bl_raster_t* raster)
             depth[i+j*raster->screen_width]=0xFFFF;
         }
     }
+    */
+    /*
+    size_t len = raster->screen_width*raster->screen_height;
+    
+    for (size_t n=0;n<len;n++) {
+        *color=pixel;
+        *depth=0xFFFF;
+        
+        color++;
+        depth++;
+    }
+    */
+    
+    __m128i* color = raster->color_buffer->data;
+    __m128i* depth = raster->depth_buffer->data;
+    
+    __m128i C = _mm_set1_epi32(pixel);
+    __m128i D = _mm_set1_epi16(0xFFFF);
+    
+    size_t len = raster->screen_width*raster->screen_height;
+    
+    for (size_t n=0;n<len/4;n++) {
+        
+        _mm_store_si128(color,C);
+        
+        color++;
+    }
+    
+    for (size_t n=0;n<len/8;n++) {
+        
+        _mm_store_si128(depth,D);
+        
+        depth++;
+    }
+
+    /*
+    for (size_t n=0;n<remain;n++) {
+    
+        *color=pixel;
+        *depth=0xFFFF;
+    
+        color++;
+        depth++;
+    }
+    */
 }
 
 void bl_raster_update(bl_raster_t* raster)
