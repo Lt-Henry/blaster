@@ -25,9 +25,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <emmintrin.h>
+
+#ifdef OPT_SSE
+
 #include <xmmintrin.h>
 #include <pmmintrin.h>
+#include <emmintrin.h>
+
+#endif
 
 
 bl_raster_t* bl_raster_new(int width,int height)
@@ -87,38 +92,19 @@ void bl_raster_set_clear_color(bl_raster_t* raster,float* color)
 
 void bl_raster_clear(bl_raster_t* raster)
 {
+
+#ifdef OPT_SSE
+    
     uint32_t pixel=bl_color_get_pixel(raster->clear_color);
-    /*
-    uint32_t* color = raster->color_buffer->data;
-    uint16_t* depth = raster->depth_buffer->data;
-    
-    
-    for (int j=0;j<raster->screen_height;j++) {
-        for (int i=0;i<raster->screen_width;i++) {
-            color[i+j*raster->screen_width]=pixel;
-            depth[i+j*raster->screen_width]=0xFFFF;
-        }
-    }
-    */
-    /*
+
     size_t len = raster->screen_width*raster->screen_height;
-    
-    for (size_t n=0;n<len;n++) {
-        *color=pixel;
-        *depth=0xFFFF;
-        
-        color++;
-        depth++;
-    }
-    */
-    
+
     __m128i* color = raster->color_buffer->data;
     __m128i* depth = raster->depth_buffer->data;
     
     __m128i C = _mm_set1_epi32(pixel);
     __m128i D = _mm_set1_epi16(0xFFFF);
     
-    size_t len = raster->screen_width*raster->screen_height;
     
     for (size_t n=0;n<len/4;n++) {
         
@@ -133,17 +119,41 @@ void bl_raster_clear(bl_raster_t* raster)
         
         depth++;
     }
-
-    /*
+    
+    uint32_t* rcolor = raster->color_buffer->data;
+    uint16_t* rdepth = raster->depth_buffer->data;
+    
+    size_t remain = len%4;
+    rcolor+=len-remain;
+    
     for (size_t n=0;n<remain;n++) {
-    
-        *color=pixel;
-        *depth=0xFFFF;
-    
-        color++;
-        depth++;
+        *rcolor=pixel;
+        rcolor++;
     }
-    */
+    
+    remain = len%8;
+    rdepth+=len-remain;
+    
+    for (size_t n=0;n<remain;n++) {
+        *rdepth=0xFFFF;
+        rdepth++;
+    }
+    
+
+#else
+    uint32_t pixel=bl_color_get_pixel(raster->clear_color);
+
+    uint32_t* color = raster->color_buffer->data;
+    uint16_t* depth = raster->depth_buffer->data;
+    
+    
+    for (int j=0;j<raster->screen_height;j++) {
+        for (int i=0;i<raster->screen_width;i++) {
+            color[i+j*raster->screen_width]=pixel;
+            depth[i+j*raster->screen_width]=0xFFFF;
+        }
+    }
+#endif
 }
 
 void bl_raster_update(bl_raster_t* raster)
@@ -171,7 +181,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     float ndc[4];
     int win[4];
 
-    float* source ;
+    float* source = vbo->data;
     
     size_t inc=vbo->attributes;
     
@@ -181,11 +191,8 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     wl[1]=raster->screen_height/2.0f;
     wl[2]=65535/2.0f;
         
-    //printf("vbo %d\n",vbo->size);
-    //printf("inc %d\n",inc);
-    for (int n=0;n<vbo->size;n++) {
-    
-        source=&(vbo->data[n*inc]);
+
+    for (int n=0;n<vbo->size;n++,source+=inc) {
         
         // eye coordinates
         bl_vector_mult(eye,source,raster->modelview->matrix);
@@ -194,12 +201,15 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         bl_vector_mult(clip,eye,raster->projection->matrix);
         
         //w-divide for NDC coordinates
-        float w=clip[3];
+        float w=1.0f/clip[3];
         
-        ndc[0]=clip[0]/w;
-        ndc[1]=clip[1]/w;
-        ndc[2]=clip[2]/w;
-        ndc[3]=clip[3]/w;
+        ndc[0]=clip[0]*w;
+        ndc[1]=clip[1]*w;
+        ndc[2]=clip[2]*w;
+        ndc[3]=clip[3]*w;
+        
+        //bl_vector_copy(ndc,clip);
+        //bl_vector_scale(ndc,w);
         
         //clip out of range z
         if (ndc[2]<-1.0f || ndc[2]>1.0f) {
@@ -207,26 +217,30 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         }
         
         // viewport
-        
-        
+/*
         win[0]=(ndc[0]*wl[0])+wl[0];
         win[1]=(ndc[1]*wl[1])+wl[1];
         win[2]=(ndc[2]*wl[2])+wl[2];
-        
-        /*
-        printf("clip %.2f %.2f %.2f %.2f\n",
-            clip[0],clip[1],clip[2],clip[3]);
-        printf("ndc %.2f %.2f %.2f %.2f\n",
-            ndc[0],ndc[1],ndc[2],ndc[3]);
-        printf("window %d %d %d\n\n",x,y,z);
         */
+        __m128 N;
+        __m128 W;
+        __m128i CI;
+        
+        N=_mm_loadu_ps(ndc);
+        W=_mm_loadu_ps(wl);
+        N=_mm_mul_ps(N,W);
+        N=_mm_add_ps(N,W);
+        
+        CI = _mm_cvtps_epi32(N);
+        _mm_storeu_si128(win,CI);
         
         //clip out of viewport
         if (win[0]<0 || win[0]>=raster->screen_width
          || win[1]<0 || win[1]>=raster->screen_height) {
             continue;
         }
-    
+        
+        
         uint16_t* zbuffer=raster->depth_buffer->data+(win[0]+win[1]*raster->screen_width);
     
         if (win[2]<*zbuffer) {
@@ -237,9 +251,11 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
                 pixel
             );
             
+            
             *zbuffer=win[2];
         }
         
-    
+        
+        
     }
 }

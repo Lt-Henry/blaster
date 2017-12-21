@@ -80,6 +80,11 @@ void bl_vector_homogeneus(float* v);
 */
 void bl_vector_mult(float* r,const float* v,const float* m);
 
+/*!
+    Scale a vector
+*/
+void bl_vector_scale(float* v,float s);
+
 #ifdef __cplusplus
 }
 #endif

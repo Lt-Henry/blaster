@@ -20,6 +20,12 @@
 
 #include <blaster/color.h>
 
+#ifdef OPT_SSE
+
+#include <xmmintrin.h>
+#include <pmmintrin.h>
+
+#endif
 
 void bl_color_set(float* c,float r,float g,float b,float a)
 {
@@ -76,6 +82,29 @@ void bl_color_clamp(float* c)
 
 uint32_t bl_color_get_pixel(const float* c)
 {
+
+#ifdef OPT_SSE
+
+    uint32_t pixel;
+    uint32_t ci[4];
+    
+    __m128i CI;
+    __m128 C;
+    __m128 K;
+    
+    C = _mm_loadu_ps(c);
+    K = _mm_set_ps1(255.0f);
+    C = _mm_mul_ps(C,K);
+    
+    CI = _mm_cvtps_epi32(C);
+    _mm_storeu_si128(ci,CI);
+
+    pixel=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
+
+    return pixel;
+
+#else
+
     uint32_t pixel;
 
     uint32_t ci[4];
@@ -89,6 +118,8 @@ uint32_t bl_color_get_pixel(const float* c)
     pixel=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
 
     return pixel;
+
+#endif
 }
 
 void bl_color_from_pixel(float* c,uint32_t pixel)

@@ -20,8 +20,13 @@
 #include <blaster/vector.h>
 
 #include <math.h>
+
+#ifdef OPT_SSE
+
 #include <xmmintrin.h>
 #include <pmmintrin.h>
+
+#endif
 
 void bl_vector_set(float* v,float x,float y,float z,float w)
 {
@@ -114,15 +119,8 @@ void bl_vector_homogeneus(float* v)
 
 void bl_vector_mult(float* r,const float* v,const float* m)
 {
-    /*
-    float w[4]={v[0],v[1],v[2],v[3]};
 
-    r[0]= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
-    r[1]= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
-    r[2]= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
-    r[3]= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
-    
-    */
+#ifdef OPT_SSE
     
     __m128 V;
     __m128 M;
@@ -146,5 +144,23 @@ void bl_vector_mult(float* r,const float* v,const float* m)
     }
     
     _mm_store_ps(r,R);
+
+#else
+
+    float w[4]={v[0],v[1],v[2],v[3]};
+
+    r[0]= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
+    r[1]= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
+    r[2]= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
+    r[3]= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
     
+#endif
+}
+
+void bl_vector_scale(float* v,float s)
+{
+    v[0]=v[0]*s;
+    v[1]=v[1]*s;
+    v[2]=v[2]*s;
+    v[3]=v[3]*s;
 }
