@@ -160,7 +160,7 @@ int main(int argc,char* argv[])
     bl_matrix_stack_load_identity(raster->projection);
     bl_matrix_stack_frustum(raster->projection,-1,1,-1,1,10,100);
     
-    bl_raster_draw(raster,points);
+    bl_raster_draw_points(raster,points);
     
     for (int n=0;n<points->size;n++) {
         float* p=points->data+(points->attributes*n);

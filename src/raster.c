@@ -52,7 +52,6 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
     
-    raster->buffer=malloc(sizeof(float)*4096);
 
     return raster;
 }
@@ -66,7 +65,6 @@ void bl_raster_delete(bl_raster_t* raster)
     bl_matrix_stack_delete(raster->modelview);
     bl_matrix_stack_delete(raster->projection);
 
-    free(raster->buffer);
     free(raster);
 }
 
@@ -171,7 +169,7 @@ int bl_raster_get_height(bl_raster_t* raster)
     return raster->screen_height;
 }
 
-void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
+void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 {
 
     // point rendering
@@ -185,11 +183,12 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
     
     size_t inc=vbo->attributes;
     
-    float wl[4];
-    
-    wl[0]=raster->screen_width/2.0f;
-    wl[1]=raster->screen_height/2.0f;
-    wl[2]=65535/2.0f;
+    const float wl[4] = {
+        raster->screen_width/2.0f,
+        raster->screen_height/2.0f,
+        65535/2.0f,
+        0.0f
+        };
         
 
     for (int n=0;n<vbo->size;n++,source+=inc) {
@@ -217,11 +216,11 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         }
         
         // viewport
-/*
+
         win[0]=(ndc[0]*wl[0])+wl[0];
         win[1]=(ndc[1]*wl[1])+wl[1];
         win[2]=(ndc[2]*wl[2])+wl[2];
-        */
+        /*
         __m128 N;
         __m128 W;
         __m128i CI;
@@ -233,7 +232,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         
         CI = _mm_cvtps_epi32(N);
         _mm_storeu_si128(win,CI);
-        
+        */
         //clip out of viewport
         if (win[0]<0 || win[0]>=raster->screen_width
          || win[1]<0 || win[1]>=raster->screen_height) {
@@ -258,4 +257,8 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo)
         
         
     }
+}
+
+void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
+{
 }

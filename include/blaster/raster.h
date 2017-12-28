@@ -59,7 +59,6 @@ typedef struct {
     /*! color used for clear */
     float clear_color[4];
     
-    float* buffer;
 
 } bl_raster_t;
 
@@ -106,7 +105,10 @@ int bl_raster_get_height(bl_raster_t* raster);
 /*!
     Draws a vertex buffer
 */
-void bl_raster_draw(bl_raster_t* raster, bl_vbo_t* vbo);
+void bl_raster_draw_points(bl_raster_t* raster, bl_vbo_t* vbo);
+
+
+void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo);
 
 #ifdef __cplusplus
 }
