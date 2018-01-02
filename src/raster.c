@@ -179,9 +179,9 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
     float ndc[4];
     int win[4];
 
-    float* source = vbo->data;
+    float* vertex = vbo->data[0];
+    float* color = vbo->data[1];
     
-    size_t inc=vbo->attributes;
     
     const float wl[4] = {
         raster->screen_width/2.0f,
@@ -191,10 +191,10 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         };
         
 
-    for (int n=0;n<vbo->size;n++,source+=inc) {
+    for (int n=0;n<vbo->size;n++,vertex+=4,color+=4) {
         
         // eye coordinates
-        bl_vector_mult(eye,source,raster->modelview->matrix);
+        bl_vector_mult(eye,vertex,raster->modelview->matrix);
         
         //clip coordinates
         bl_vector_mult(clip,eye,raster->projection->matrix);
@@ -240,10 +240,10 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         }
         
         
-        uint16_t* zbuffer=raster->depth_buffer->data+(win[0]+win[1]*raster->screen_width);
-    
+        uint16_t* zbuffer=raster->depth_buffer->data;
+        zbuffer+=(win[0]+win[1]*raster->screen_width);
         if (win[2]<*zbuffer) {
-            uint32_t pixel=bl_color_get_pixel(source+4);
+            uint32_t pixel=bl_color_get_pixel(color);
     
             bl_texture_set_pixel(raster->color_buffer,
                 win[0],win[1],
@@ -261,4 +261,6 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 {
+
+
 }

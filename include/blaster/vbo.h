@@ -33,36 +33,26 @@ typedef struct {
     /*! real number of vertices */
     size_t size;
 
-    /*! maximum number of vertices */
-    size_t capacity;
-    
-    /*! number of attributes per vertex */
-    size_t attributes;
+    uint8_t attrib_size[8];
+    uint8_t attrib_type[8];
     
     /*! pointer to vbo data */
-    float* data; 
+    void* data[8]; 
 
 } bl_vbo_t;
 
 /*!
     Create a new vbo of given size
 */
-bl_vbo_t* bl_vbo_new(size_t size,size_t attributes);
+bl_vbo_t* bl_vbo_new(size_t size,uint8_t attributes[16]);
 
 /*!
     Destroys vbo
 */
 void bl_vbo_delete(bl_vbo_t* vbo);
 
-/*!
-    Clear vertex count
-*/
-void bl_vbo_clear(bl_vbo_t* vbo);
 
-/*!
-    Adds a vertex
-*/
-void bl_vbo_add(bl_vbo_t* vbo,...);
+void bl_vbo_set(bl_vbo_t* vbo,int attrib,int index,void* value);
 
 #ifdef __cplusplus
 }

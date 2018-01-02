@@ -135,17 +135,28 @@ int main(int argc,char* argv[])
     bl_raster_t* raster = bl_raster_new(1024,768);
     
     //1000 vertices with 8 attributes (pos,color)
-    bl_vbo_t* points = bl_vbo_new(1000,8);
+    uint8_t attribs[16] = { BL_F32,4,
+                            BL_F32,4,
+                            0,0,0,0,0,0,0,0,0,0,0,0 };
+                            
+    bl_vbo_t* points = bl_vbo_new(1000,attribs);
     
     double alpha=0.0;
     float step=0.0f;
     for (int n=0;n<1000;n++) {
-        float x = cos(alpha);
-        float y = sin(alpha);
-        float z= -(10.0f+step);
+        float pos[4];
+        pos[0] = cos(alpha);
+        pos[1] = sin(alpha);
+        pos[2]= -(10.0f+step);
+        pos[3]=1.0f;
+        
+        float color[4]={1.0f,0.0f,0.0f,1.0f};
+        
         alpha+=0.1;
         step+=0.1f;
-        bl_vbo_add(points,x,y,z,1.0f,1.0f,0.0f,0.0f,1.0f);
+        
+        bl_vbo_set(points,0,n,pos);
+        bl_vbo_set(points,1,n,color);
     }
     
     
@@ -162,10 +173,6 @@ int main(int argc,char* argv[])
     
     bl_raster_draw_points(raster,points);
     
-    for (int n=0;n<points->size;n++) {
-        float* p=points->data+(points->attributes*n);
-        //printf("zw %.2f %.2f\n",p[2],p[3]);
-    }
     
     //save output
     bl_tga_save(raster->color_buffer,"color.tga");

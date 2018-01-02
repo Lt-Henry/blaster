@@ -24,44 +24,58 @@
 #include <stdarg.h>
 
 
-bl_vbo_t* bl_vbo_new(size_t size,size_t attributes)
+bl_vbo_t* bl_vbo_new(size_t size,uint8_t attributes[16])
 {
     bl_vbo_t* vbo=NULL;
 
     vbo=malloc(sizeof(bl_vbo_t));
 
-    vbo->capacity=size;
-    vbo->size=0;
-    vbo->attributes=attributes;
-    vbo->data=aligned_alloc(16,sizeof(float)*size*attributes);
+    vbo->size=size;
+    
+    for (int n=0;n<16;n+=2) {
+        
+        uint8_t atype = attributes[n];
+        uint8_t anum = attributes[n+1];
+        
+        uint8_t bytes = atype >> 4;
+        
+        vbo->attrib_type[n/2] = atype;
+        vbo->attrib_size[n/2] = anum;
+        
+        if (atype>0 && anum>0) {
+            vbo->data[n/2] = aligned_alloc(16,bytes*size*anum);
+        }
+        else {
+            vbo->data[n/2] = NULL;
+        }
+        
+    }
+    
 
     return vbo;
 }
 
 void bl_vbo_delete(bl_vbo_t* vbo)
 {
-    free(vbo->data);
+    for (int n=0;n<8;n++) {
+        if (vbo->data[n]!=NULL) {
+            free(vbo->data[n]);
+        }
+    }
     free(vbo);
 }
 
-void bl_vbo_clear(bl_vbo_t* vbo)
-{
-    vbo->size=0;
-}
 
-void bl_vbo_add(bl_vbo_t* vbo,...)
+void bl_vbo_set(bl_vbo_t* vbo,int attrib,int index,void* value)
 {
-    float* ptr = &vbo->data[vbo->size*vbo->attributes];
+
+    uint8_t* source = value;
+    uint8_t* dest = vbo->data[attrib];
     
-    va_list args;
+    size_t bytes = vbo->attrib_type[attrib]>>4;
     
-    va_start(args,vbo);
+    dest+=(bytes*index*vbo->attrib_size[attrib]);
     
-    for (int n=0;n<vbo->attributes;n++) {
-        ptr[n]=(float)va_arg(args,double);
-    }
+    memcpy(dest,source,vbo->attrib_size[attrib]*bytes);
     
-    va_end(args);
-    
-    vbo->size++;
 }

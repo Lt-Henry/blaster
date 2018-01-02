@@ -20,6 +20,15 @@
 #ifndef BLASTER_CONSTANTS
 #define BLASTER_CONSTANTS
 
+/*! data types */
+#define BL_U8    0x10
+#define BL_U16    0x21
+#define BL_U32    0x42
+#define BL_U64    0x83
+#define BL_F32    0x44
+#define BL_F64    0x85
+
+
 /*! texture types */
 #define BL_TEXTURE_U8    0
 #define BL_TEXTURE_U16   1
