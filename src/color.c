@@ -86,7 +86,7 @@ uint32_t bl_color_get_pixel(const float* c)
 #ifdef OPT_SSE
 
     uint32_t pixel;
-    uint32_t ci[4];
+    //uint32_t ci[4];
     
     __m128i CI;
     __m128 C;
@@ -97,8 +97,8 @@ uint32_t bl_color_get_pixel(const float* c)
     C = _mm_mul_ps(C,K);
     
     CI = _mm_cvtps_epi32(C);
-    _mm_storeu_si128(ci,CI);
-
+    //_mm_storeu_si128(ci,CI);
+    uint32_t* ci = (uint32_t*)&CI;
     pixel=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
 
     return pixel;
