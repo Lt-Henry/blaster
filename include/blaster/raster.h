@@ -34,8 +34,8 @@ extern "C" {
 #include "vbo.h"
 
 typedef struct {
-    uint16_t x;
-    uint16_t y;
+    uint32_t x;
+    uint32_t y;
     uint32_t depth;
     uint32_t pixel;
 } bl_fragment_t;

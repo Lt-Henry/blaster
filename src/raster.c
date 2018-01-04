@@ -53,6 +53,7 @@ bl_raster_t* bl_raster_new(int width,int height)
     bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
     
     raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
+    //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
 
     return raster;
 }
@@ -162,25 +163,23 @@ void bl_raster_update(bl_raster_t* raster)
     
     while (1) {
     
-        if (fragment->x==0xffff && fragment->y==0xffff) {
+        if (fragment->x==0xffff) {
             break;
         }
         
-        int x = fragment->x;
-        int y = fragment->y;
-        uint16_t depth = fragment->depth;
+        
+        size_t offset=fragment->x+fragment->y*raster->screen_width;
         
         uint16_t* zbuffer=raster->depth_buffer->data;
-        zbuffer+=(x+y*raster->screen_width);
+        zbuffer+=offset;
+        
+        uint32_t* cbuffer=raster->color_buffer->data;
+        cbuffer+=offset;
 
-        if (depth<*zbuffer) {
-           
-            bl_texture_set_pixel(raster->color_buffer,
-                x,y,fragment->pixel
-            );
+        if (fragment->depth<*zbuffer) {
             
-            
-            *zbuffer=depth;
+            *zbuffer=fragment->depth;
+            *cbuffer=fragment->pixel;
         }
         
         fragment++;
@@ -204,7 +203,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
     float clip[4];
     float ndc[4];
-    int win[4];
+    uint32_t win[4];
 
     float* vertex = vbo->data[0];
     float* color = vbo->data[1];
@@ -229,7 +228,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         
         //clip coordinates
         bl_vector_mult(clip,vertex,matrix);
-        
+        //__builtin_prefetch(color);
         //w-divide for NDC coordinates
         float w=1.0f/clip[3];
         
@@ -275,7 +274,11 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         fragment->y=win[1];
         fragment->depth=win[2];
         fragment->pixel=bl_color_get_pixel(color);
-        
+        /*
+        __m128i W;
+        W=_mm_loadu_si128(win);
+        _mm_storeu_si128((uint32_t*)fragment,W);
+        */
         fragment++;
         
         /*
