@@ -52,6 +52,7 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
     
+    raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
 
     return raster;
 }
@@ -65,6 +66,7 @@ void bl_raster_delete(bl_raster_t* raster)
     bl_matrix_stack_delete(raster->modelview);
     bl_matrix_stack_delete(raster->projection);
 
+    free(raster->fragments);
     free(raster);
 }
 
@@ -156,7 +158,33 @@ void bl_raster_clear(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
+    bl_fragment_t* fragment=raster->fragments;
+    
+    while (1) {
+    
+        if (fragment->x==0xffff && fragment->y==0xffff) {
+            break;
+        }
+        
+        int x = fragment->x;
+        int y = fragment->y;
+        uint16_t depth = fragment->depth;
+        
+        uint16_t* zbuffer=raster->depth_buffer->data;
+        zbuffer+=(x+y*raster->screen_width);
 
+        if (depth<*zbuffer) {
+           
+            bl_texture_set_pixel(raster->color_buffer,
+                x,y,fragment->pixel
+            );
+            
+            
+            *zbuffer=depth;
+        }
+        
+        fragment++;
+    }
 }
 
 int bl_raster_get_width(bl_raster_t* raster)
@@ -180,6 +208,8 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
     float* vertex = vbo->data[0];
     float* color = vbo->data[1];
+    
+    bl_fragment_t* fragment=raster->fragments;
     
     
     const float wl[4] = {
@@ -241,7 +271,14 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
             continue;
         }
         
+        fragment->x=win[0];
+        fragment->y=win[1];
+        fragment->depth=win[2];
+        fragment->pixel=bl_color_get_pixel(color);
         
+        fragment++;
+        
+        /*
         uint16_t* zbuffer=raster->depth_buffer->data;
         zbuffer+=(win[0]+win[1]*raster->screen_width);
 
@@ -256,10 +293,13 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
             
             *zbuffer=win[2];
         }
-        
+        */
         
         
     }
+    
+    fragment->x=0xffff;
+    fragment->y=0xffff;
 }
 
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)

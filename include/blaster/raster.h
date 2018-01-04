@@ -33,6 +33,13 @@ extern "C" {
 #include "matrix_stack.h"
 #include "vbo.h"
 
+typedef struct {
+    uint16_t x;
+    uint16_t y;
+    uint32_t depth;
+    uint32_t pixel;
+} bl_fragment_t;
+
 /*!
     Raster main structure
 */
@@ -59,7 +66,10 @@ typedef struct {
     /*! color used for clear */
     float clear_color[4];
     
-
+    bl_fragment_t* fragments;
+    
+    size_t num_fragments;
+    
 } bl_raster_t;
 
 /*!
