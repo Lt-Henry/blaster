@@ -26,35 +26,48 @@
 extern "C" {
 #endif
 
+typedef union {
+    
+    float value[4];
+    
+    struct {
+        float r;
+        float g;
+        float b;
+        float a;
+    };
+    
+} bl_color_t;
+
 /*!
     Sets a float rgba color
 */
-void bl_color_set(float* c,float r,float g,float b,float a);
+void bl_color_set(bl_color_t* c,float r,float g,float b,float a);
 
 /*!
     Adds two colors
 */
-void bl_color_add(float* c,float* a,float* b);
+void bl_color_add(bl_color_t* c,bl_color_t* a,bl_color_t* b);
 
 /*!
     Substracts two colors
 */
-void bl_color_sub(float* c,float* a,float* b);
+void bl_color_sub(bl_color_t* c,b_color_t* a,bl_color_t* b);
 
 /*!
     Mult a color by a scalar
 */
-void bl_color_scale(float* c,float s);
+void bl_color_scale(bl_color_t* c,float s);
 
 /*!
     Mult two colors
 */
-void bl_color_mult(float* c,float* a,float* b);
+void bl_color_mult(bl_color_t* c,bl_color_t* a,bl_color_t* b);
 
 /*!
     clamp color to [0,1] range
 */
-void bl_color_clamp(float* c);
+void bl_color_clamp(bl_color_t* c);
 
 /*!
     color to pixel

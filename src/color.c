@@ -27,57 +27,58 @@
 
 #endif
 
-void bl_color_set(float* c,float r,float g,float b,float a)
+void bl_color_set(bl_color_t* c,float r,float g,float b,float a)
 {
-    c[0]=r;
-    c[1]=g;
-    c[2]=b;
-    c[3]=a;
+    c->r=r;
+    c->g=g;
+    c->b=b;
+    c->a=a;
 }
 
-void bl_color_add(float* c,float* a,float* b)
+void bl_color_add(bl_color_t* c,bl_color_t* a,bl_color_t* b)
 {
-    c[0]=a[0]+b[0];
-    c[1]=a[1]+b[1];
-    c[2]=a[2]+b[2];
-    c[3]=a[3]+b[3];
+    c->r = a->r + b->r;
+    c->g = a->g + b->g;
+    c->b = a->b + b->b;
+    c->a = a->a + b->a;
 }
 
 void bl_color_sub(float* c,float* a,float* b)
 {
-    c[0]=a[0]-b[0];
-    c[1]=a[1]-b[1];
-    c[2]=a[2]-b[2];
-    c[3]=a[3]-b[3];
+    c->r = a->r - b->r;
+    c->g = a->g - b->g;
+    c->b = a->b - b->b;
+    c->a = a->a - b->a;
 }
 
-void bl_color_scale(float* c,float s)
+void bl_color_scale(bl_color_t* c,float s)
 {
-    c[0]=c[0]*s;
-    c[1]=c[1]*s;
-    c[2]=c[2]*s;
-    c[3]=c[3]*s;
+    c->r*=s;
+    c->g*=s;
+    c->b*=s;
+    c->a*=s;
 }
 
-void bl_color_mult(float* c,float* a,float* b)
+void bl_color_mult(bl_color_t* c,bl_color_t* a,bl_color_t* b)
 {
-    c[0]=a[0]*b[0];
-    c[1]=a[1]*b[1];
-    c[2]=a[2]*b[2];
-    c[3]=a[3]*b[3];
+    c->r = a->r * b->r;
+    c->g = a->g * b->g;
+    c->b = a->b * b->b;
+    c->a = a->a * b->a;
 }
 
-void bl_color_clamp(float* c)
+void bl_color_clamp(bl_color_t* c)
 {
-    c[0]=(c[0]>1.0f) ? 1.0f : c[0];
-    c[1]=(c[1]>1.0f) ? 1.0f : c[1];
-    c[2]=(c[2]>1.0f) ? 1.0f : c[2];
-    c[3]=(c[3]>1.0f) ? 1.0f : c[3];
-
-    c[0]=(c[0]<0.0f) ? 0.0f : c[0];
-    c[1]=(c[1]<0.0f) ? 0.0f : c[1];
-    c[2]=(c[2]<0.0f) ? 0.0f : c[2];
-    c[3]=(c[3]<0.0f) ? 0.0f : c[3];
+    c->r=(c->r>1.0f) ? 1.0f : c->r;
+    c->g=(c->g>1.0f) ? 1.0f : c->g;
+    c->b=(c->b>1.0f) ? 1.0f : c->b;
+    c->a=(c->a>1.0f) ? 1.0f : c->a;
+    
+    c->r=(c->r<0.0f) ? 0.0f : c->r;
+    c->g=(c->g<0.0f) ? 0.0f : c->g;
+    c->b=(c->b<0.0f) ? 0.0f : c->b;
+    c->a=(c->a<0.0f) ? 0.0f : c->a;
+    
 }
 
 uint32_t bl_color_get_pixel(const float* c)
