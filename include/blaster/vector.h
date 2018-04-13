@@ -25,65 +25,77 @@
 extern "C" {
 #endif
 
+typedef union {
+
+    float data[4];
+    
+    struct {
+        float x;
+        float y;
+        float z;
+        float w;
+    };
+} bl_vector_t;
+
 /*!
     Sets vector values
 */
-void bl_vector_set(float* v,float x,float y,float z,float w);
+void bl_vector_set(bl_vector_t* v,float x,float y,float z,float w);
 
 /*!
     Copy vectors
 */
-void bl_vector_copy(float* d,float* s);
+void bl_vector_copy(bl_vector_t* d,bl_vector_t* s);
 
 /*!
     Invert vector
 */
-void bl_vector_invert(float* v);
+void bl_vector_invert(bl_vector_t* v);
 
 /*!
     Adds vectors
 */
-void bl_vector_add(float* r,float* a,float* b);
+void bl_vector_add(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b);
 
 /*!
     Substracts vectors
 */
-void bl_vector_sub(float* r,float* a,float* b);
+void bl_vector_sub(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b);
 
 /*!
     Dot product
 */
-float bl_vector_dot(const float* a,const float* b);
+float bl_vector_dot(const bl_vector_t* a,const bl_vector_t* b);
 
 /*!
     Cross product
 */
-void bl_vector_cross(float* r,float* a,float* b);
+void bl_vector_cross(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b);
 
 /*!
     Vector Norm (euclidean distance)
 */
-float bl_vector_norm(const float* v);
+float bl_vector_norm(const bl_vector_t* v);
 
 /*!
     Vector normalization
 */
-void bl_vector_normalize(float* v);
+void bl_vector_normalize(bl_vector_t* v);
 
 /*!
     Divide by its W component
 */
-void bl_vector_homogeneus(float* v);
+void bl_vector_homogeneus(bl_vector_t* v);
 
 /*!
     Vector Matrix product
 */
-void bl_vector_mult(float* r,const float* v,const float* m);
+void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m);
 
 /*!
     Scale a vector
 */
-void bl_vector_scale(float* v,float s);
+void bl_vector_scale(bl_vector_t* v,float s);
 
 #ifdef __cplusplus
 }

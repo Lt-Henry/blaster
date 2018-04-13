@@ -36,20 +36,21 @@ void bl_vector_set(float* v,float x,float y,float z,float w)
     v[3]=w;
 }
 
-void bl_vector_copy(float* d,float* s)
+void bl_vector_copy(bl_vector_t* d,bl_vector_t* s)
 {
-    d[0]=s[0];
-    d[1]=s[1];
-    d[2]=s[2];
-    d[3]=s[3];
+    d->data[0]=s->data[0];
+    d->data[1]=s->data[1];
+    d->data[2]=s->data[2];
+    d->data[3]=s->data[3];
+    
 }
 
-void bl_vector_invert(float* v)
+void bl_vector_invert(bl_vector_t* v)
 {
-    v[0]=-v[0];
-    v[1]=-v[1];
-    v[2]=-v[2];
-    v[3]=-v[3];
+    v->x=-v->x;
+    v->y=-v->y;
+    v->z=-v->z;
+    v->w=-v->w;
 }
 
 void bl_vector_add(float* r,float* a,float* b)
