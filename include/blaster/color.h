@@ -28,7 +28,7 @@ extern "C" {
 
 typedef union {
     
-    float value[4];
+    float channel[4];
     
     struct {
         float r;
@@ -38,6 +38,11 @@ typedef union {
     };
     
 } bl_color_t;
+
+typedef union {
+    uint32_t value;
+    uint8_t channel[4];
+} bl_pixel_t;
 
 /*!
     Sets a float rgba color
@@ -72,17 +77,17 @@ void bl_color_clamp(bl_color_t* c);
 /*!
     color to pixel
 */
-uint32_t bl_color_get_pixel(const float* c);
+bl_pixel_t bl_color_get_pixel(const bl_color_t* c);
 
 /*!
     pixel to color
 */
-void bl_color_from_pixel(float* c,uint32_t pixel);
+void bl_color_from_pixel(bl_color_t* c,bl_pixel_t pixel);
 
 /*!
     create color from bytes
 */
-void bl_color_from_ub(float* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+void bl_color_from_ub(bl_color_t* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a);
 
 #ifdef __cplusplus
 }

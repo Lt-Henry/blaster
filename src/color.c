@@ -81,10 +81,10 @@ void bl_color_clamp(bl_color_t* c)
     
 }
 
-uint32_t bl_color_get_pixel(const float* c)
+bl_pixel_t bl_color_get_pixel(const bl_color_t* c)
 {
 
-#ifdef OPT_SSE
+#ifdef DEPRECATED
 
     uint32_t pixel;
     //uint32_t ci[4];
@@ -106,51 +106,44 @@ uint32_t bl_color_get_pixel(const float* c)
 
 #else
 
-    uint32_t pixel;
-
-    uint32_t ci[4];
-
-    ci[0]=c[0]*255.0f;
-    ci[1]=c[1]*255.0f;
-    ci[2]=c[2]*255.0f;
-    ci[3]=c[3]*255.0f;
-
-    // (msb) ABGR (lsb)
-    pixel=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
-
+    bl_pixel_t pixel;
+    
+    pixel.channel[0] = c->r*255.0f;
+    pixel.channel[1] = c->g*255.0f;
+    pixel.channel[2] = c->b*255.0f;
+    pixel.channel[3] = c->a*255.0f;
+    
     return pixel;
 
 #endif
 }
 
-void bl_color_from_pixel(float* c,uint32_t pixel)
+void bl_color_from_pixel(bl_color_t* c,bl_pixel_t pixel)
 {
-    uint32_t ci[4];
+    const float rc=1.0f/255.0f;
 
-    // ToDo: check
+    c->r=pixel.channel[0];
+    c->g=pixel.channel[1];
+    c->b=pixel.channel[2];
+    c->a=pixel.channel[3];
     
-    ci[0]=(pixel & 0xff000000)>>24;
-    ci[1]=(pixel & 0x00ff0000)>>16;
-    ci[2]=(pixel & 0x0000ff00)>>8;
-    ci[3]=(pixel & 0x000000ff);
-
-    float rc=1.0f/255.0f;
-
-    c[0]=(float)ci[0];
-    c[1]=(float)ci[1];
-    c[2]=(float)ci[2];
-    c[3]=(float)ci[3];
-
-    c[0]*=rc;
-    c[1]*=rc;
-    c[2]*=rc;
-    c[3]*=rc;
+    c->r*=rc;
+    c->g*=rc;
+    c->b*=rc;
+    c->a*=rc;
+    
 }
 
-void bl_color_from_ub(float* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a)
+void bl_color_from_ub(bl_color_t* c,uint8_t r,uint8_t g,uint8_t b,uint8_t a)
 {
-    c[0]=r/255.0f;
-    c[1]=g/255.0f;
-    c[2]=b/255.0f;
-    c[3]=a/255.0f;
+    const float rc=1.0f/255.0f;
+    c->r=r;
+    c->g=g;
+    c->b=b;
+    c->a=a;
+    
+    c->r*=rc;
+    c->g*=rc;
+    c->b*=rc;
+    c->a*=rc;
 }
