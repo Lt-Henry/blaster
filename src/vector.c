@@ -53,72 +53,73 @@ void bl_vector_invert(bl_vector_t* v)
     v->w=-v->w;
 }
 
-void bl_vector_add(float* r,float* a,float* b)
+void bl_vector_add(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b)
 {
-    r[0]=a[0]+b[0];
-    r[1]=a[1]+b[1];
-    r[2]=a[2]+b[2];
-    r[3]=a[3]+b[3];
+    r->x=a->x+b->x;
+    r->y=a->y+b->y;
+    r->z=a->z+b->z;
+    r->w=a->w+b->w;
 }
 
-void bl_vector_sub(float* r,float* a,float* b)
+void bl_vector_sub(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b)
 {
-    r[0]=a[0]-b[0];
-    r[1]=a[1]-b[1];
-    r[2]=a[2]-b[2];
-    r[3]=a[3]-b[3];
+    r->x=a->x-b->x;
+    r->y=a->y-b->y;
+    r->z=a->z-b->z;
+    r->w=a->w-b->w;
+
 }
 
-float bl_vector_dot(const float* a,const float* b)
+float bl_vector_dot(const bl_vector_t* a,const bl_vector_t* b)
 {
     float ret;
-    ret=(a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]) + (a[3]*b[3]);
+    ret=(a->x*b->x) + (a->y*b->y) + (a->z*b->z) + (a->w*b->w);
 
     return ret;
 }
 
-void bl_vector_cross(float* r,float* a,float* b)
+void bl_vector_cross(bl_vector_t* r,bl_vector_t* a,bl_vector_t* b)
 {
     float tmp[4];
 
-    tmp[0] = a[1]*b[2] - a[2]*b[1];
-    tmp[1] = a[2]*b[0] - a[0]*b[2];
-    tmp[2] = a[0]*b[1] - a[1]*b[0];
+    tmp[0] = a->y*b->z - a->z*b->y;
+    tmp[1] = a->z*b->x - a->x*b->z;
+    tmp[2] = a->x*b->y - a->y*b->x;
     tmp[3] = 0.0f;
 
-    r[0]=tmp[0];
-    r[1]=tmp[1];
-    r[2]=tmp[2];
-    r[3]=tmp[3];
+    r->x=tmp[0];
+    r->y=tmp[1];
+    r->z=tmp[2];
+    r->w=tmp[3];
 }
 
-float bl_vector_norm(const float* v)
+float bl_vector_norm(const bl_vector_t* v)
 {
-    float tmp=(v[0]*v[0])+(v[1]*v[1])+(v[2]*v[2])+(v[3]*v[3]);
+    float tmp=(v->x*v->x)+(v->y*v->y)+(v->z*v->z)+(v->w*v->w);
     return sqrtf(tmp);
 }
 
-void bl_vector_normalize(float* v)
+void bl_vector_normalize(bl_vector_t* v)
 {
     float rW=1.0f/bl_vector_norm(v);
 
-    v[0]*=rW;
-    v[1]*=rW;
-    v[2]*=rW;
-    v[3]*=rW;
+    v->x*=rW;
+    v->y*=rW;
+    v->z*=rW;
+    v->w*=rW;
 }
 
-void bl_vector_homogeneus(float* v)
+void bl_vector_homogeneus(bl_vector_t* v)
 {
-    float rW=1.0f/v[3];
+    float rW=1.0f/v->w;
 
-    v[0]*=rW;
-    v[1]*=rW;
-    v[2]*=rW;
-    v[3]=1.0f;
+    v->x*=rW;
+    v->y*=rW;
+    v->z*=rW;
+    v->w=1.0f;
 }
 
-void bl_vector_mult(float* r,const float* v,const float* m)
+void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
 {
 
 #ifdef OPT_SSE
@@ -148,20 +149,20 @@ void bl_vector_mult(float* r,const float* v,const float* m)
 
 #else
 
-    float w[4]={v[0],v[1],v[2],v[3]};
+    float w[4]={v->x,v->y,v->z,v->w};
 
-    r[0]= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
-    r[1]= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
-    r[2]= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
-    r[3]= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
+    r->x= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
+    r->y= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
+    r->z= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
+    r->w= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
     
 #endif
 }
 
-void bl_vector_scale(float* v,float s)
+void bl_vector_scale(bl_vector_t* v,float s)
 {
-    v[0]=v[0]*s;
-    v[1]=v[1]*s;
-    v[2]=v[2]*s;
-    v[3]=v[3]*s;
+    v->x*=s;
+    v->y*=s;
+    v->z*=s;
+    v->w*=s;
 }

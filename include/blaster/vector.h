@@ -25,6 +25,8 @@
 extern "C" {
 #endif
 
+#include "matrix.h"
+
 typedef union {
 
     float data[4];
