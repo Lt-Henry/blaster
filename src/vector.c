@@ -149,12 +149,11 @@ void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
 
 #else
 
-    float w[4]={v->x,v->y,v->z,v->w};
 
-    r->x= (m[4*0+0] * w[0]) + (m[4*1+0] * w[1]) + (m[4*2+0] * w[2]) + (m[4*3+0] * w[3]);
-    r->y= (m[4*0+1] * w[0]) + (m[4*1+1] * w[1]) + (m[4*2+1] * w[2]) + (m[4*3+1] * w[3]);
-    r->z= (m[4*0+2] * w[0]) + (m[4*1+2] * w[1]) + (m[4*2+2] * w[2]) + (m[4*3+2] * w[3]);
-    r->w= (m[4*0+3] * w[0]) + (m[4*1+3] * w[1]) + (m[4*2+3] * w[2]) + (m[4*3+3] * w[3]);
+    r->x= (m->data[4*0+0] * v->x) + (m->data[4*1+0] * v->y) + (m->data[4*2+0] * v->z) + (m->data[4*3+0] * v->w);
+    r->y= (m->data[4*0+1] * v->x) + (m->data[4*1+1] * v->y) + (m->data[4*2+1] * v->z) + (m->data[4*3+1] * v->w);
+    r->z= (m->data[4*0+2] * v->x) + (m->data[4*1+2] * v->y) + (m->data[4*2+2] * v->z) + (m->data[4*3+2] * v->w);
+    r->w= (m->data[4*0+3] * v->x) + (m->data[4*1+3] * v->y) + (m->data[4*2+3] * v->z) + (m->data[4*3+3] * v->w);
     
 #endif
 }

@@ -29,164 +29,164 @@
 
 #endif
 
-void bl_matrix_set(float* m,int r,int c,float v)
+void bl_matrix_set(bl_matrix_t* m,int r,int c,float v)
 {
-    m[c+(r*4)]=v;
+    m->data[c+(r*4)]=v;
 }
 
-float bl_matrix_get(float* m,int r,int c)
+float bl_matrix_get(bl_matrix_t* m,int r,int c)
 {
-    return m[c+(r*4)];
+    return m->data[c+(r*4)];
 }
 
-void bl_matrix_copy(float* d,float* s)
+void bl_matrix_copy(bl_matrix_t* d,bl_matrix_t* s)
 {
 
     for (int n=0;n<16;n++) {
-        d[n]=s[n];
+        d->data[n]=s->data[n];
     }
 }
 
-void bl_matrix_identity(float* m)
+void bl_matrix_identity(bl_matrix_t* m)
 {
-    m[0]=1.0f;
-    m[1]=0.0f;
-    m[2]=0.0f;
-    m[3]=0.0f;
+    m->data[0]=1.0f;
+    m->data[1]=0.0f;
+    m->data[2]=0.0f;
+    m->data[3]=0.0f;
 
-    m[4]=0.0f;
-    m[5]=1.0f;
-    m[6]=0.0f;
-    m[7]=0.0f;
+    m->data[4]=0.0f;
+    m->data[5]=1.0f;
+    m->data[6]=0.0f;
+    m->data[7]=0.0f;
 
-    m[8]=0.0f;
-    m[9]=0.0f;
-    m[10]=1.0f;
-    m[11]=0.0f;
+    m->data[8]=0.0f;
+    m->data[9]=0.0f;
+    m->data[10]=1.0f;
+    m->data[11]=0.0f;
 
-    m[12]=0.0f;
-    m[13]=0.0f;
-    m[14]=0.0f;
-    m[15]=1.0f;
+    m->data[12]=0.0f;
+    m->data[13]=0.0f;
+    m->data[14]=0.0f;
+    m->data[15]=1.0f;
 }
 
-void bl_matrix_translate(float* m,float x,float y,float z)
+void bl_matrix_translate(bl_matrix_t* m,float x,float y,float z)
 {
-    m[0]=1.0f;
-    m[1]=0.0f;
-    m[2]=0.0f;
-    m[3]=0.0f;
+    m->data[0]=1.0f;
+    m->data[1]=0.0f;
+    m->data[2]=0.0f;
+    m->data[3]=0.0f;
 
-    m[4]=0.0f;
-    m[5]=1.0f;
-    m[6]=0.0f;
-    m[7]=0.0f;
+    m->data[4]=0.0f;
+    m->data[5]=1.0f;
+    m->data[6]=0.0f;
+    m->data[7]=0.0f;
 
-    m[8]=0.0f;
-    m[9]=0.0f;
-    m[10]=1.0f;
-    m[11]=0.0f;
+    m->data[8]=0.0f;
+    m->data[9]=0.0f;
+    m->data[10]=1.0f;
+    m->data[11]=0.0f;
 
-    m[12]=x;
-    m[13]=y;
-    m[14]=z;
-    m[15]=1.0f;
+    m->data[12]=x;
+    m->data[13]=y;
+    m->data[14]=z;
+    m->data[15]=1.0f;
 }
 
-void bl_matrix_rotate_x(float* m,float rads)
+void bl_matrix_rotate_x(bl_matrix_t* m,float rads)
 {
-    m[0]=1.0f;
-    m[1]=0.0f;
-    m[2]=0.0f;
-    m[3]=0.0f;
+    m->data[0]=1.0f;
+    m->data[1]=0.0f;
+    m->data[2]=0.0f;
+    m->data[3]=0.0f;
 
-    m[4]=0.0f;
-    m[5]=cosf(rads);
-    m[6]=sinf(rads);
-    m[7]=0.0f;
+    m->data[4]=0.0f;
+    m->data[5]=cosf(rads);
+    m->data[6]=sinf(rads);
+    m->data[7]=0.0f;
 
-    m[8]=0.0f;
-    m[9]=-sinf(rads);
-    m[10]=cosf(rads);
-    m[11]=0.0f;
+    m->data[8]=0.0f;
+    m->data[9]=-sinf(rads);
+    m->data[10]=cosf(rads);
+    m->data[11]=0.0f;
 
-    m[12]=0.0f;
-    m[13]=0.0f;
-    m[14]=0.0f;
-    m[15]=1.0f;
+    m->data[12]=0.0f;
+    m->data[13]=0.0f;
+    m->data[14]=0.0f;
+    m->data[15]=1.0f;
 }
 
-void bl_matrix_rotate_y(float* m,float rads)
+void bl_matrix_rotate_y(bl_matrix_t* m,float rads)
 {
-    m[0]=cosf(rads);
-    m[1]=0.0f;
-    m[2]-=sinf(rads);
-    m[3]=0.0f;
+    m->data[0]=cosf(rads);
+    m->data[1]=0.0f;
+    m->data[2]-=sinf(rads);
+    m->data[3]=0.0f;
 
-    m[4]=0.0f;
-    m[5]=1.0f;
-    m[6]=0.0f;
-    m[7]=0.0f;
+    m->data[4]=0.0f;
+    m->data[5]=1.0f;
+    m->data[6]=0.0f;
+    m->data[7]=0.0f;
 
-    m[8]=sinf(rads);
-    m[9]=0.0f;
-    m[10]=cosf(rads);
-    m[11]=0.0f;
+    m->data[8]=sinf(rads);
+    m->data[9]=0.0f;
+    m->data[10]=cosf(rads);
+    m->data[11]=0.0f;
 
-    m[12]=0.0f;
-    m[13]=0.0f;
-    m[14]=0.0f;
-    m[15]=1.0f;
+    m->data[12]=0.0f;
+    m->data[13]=0.0f;
+    m->data[14]=0.0f;
+    m->data[15]=1.0f;
 }
 
-void bl_matrix_rotate_z(float* m,float rads)
+void bl_matrix_rotate_z(bl_matrix_t* m,float rads)
 {
-    m[0]=cosf(rads);
-    m[1]=sinf(rads);
-    m[2]=0.0f;
-    m[3]=0.0f;
+    m->data[0]=cosf(rads);
+    m->data[1]=sinf(rads);
+    m->data[2]=0.0f;
+    m->data[3]=0.0f;
 
-    m[4]=-sinf(rads);
-    m[5]=cosf(rads);
-    m[6]=0.0f;
-    m[7]=0.0f;
+    m->data[4]=-sinf(rads);
+    m->data[5]=cosf(rads);
+    m->data[6]=0.0f;
+    m->data[7]=0.0f;
 
-    m[8]=0.0f;
-    m[9]=0.0f;
-    m[10]=1.0f;
-    m[11]=0.0f;
+    m->data[8]=0.0f;
+    m->data[9]=0.0f;
+    m->data[10]=1.0f;
+    m->data[11]=0.0f;
 
-    m[12]=0.0f;
-    m[13]=0.0f;
-    m[14]=0.0f;
-    m[15]=1.0f;
+    m->data[12]=0.0f;
+    m->data[13]=0.0f;
+    m->data[14]=0.0f;
+    m->data[15]=1.0f;
 }
 
-void bl_matrix_scale(float* m,float x,float y,float z)
+void bl_matrix_scale(bl_matrix_t* m,float x,float y,float z)
 {
-    m[0]=x;
-    m[1]=0.0f;
-    m[2]=0.0f;
-    m[3]=0.0f;
+    m->data[0]=x;
+    m->data[1]=0.0f;
+    m->data[2]=0.0f;
+    m->data[3]=0.0f;
 
-    m[4]=0.0f;
-    m[5]=y;
-    m[6]=0.0f;
-    m[7]=0.0f;
+    m->data[4]=0.0f;
+    m->data[5]=y;
+    m->data[6]=0.0f;
+    m->data[7]=0.0f;
 
-    m[8]=0.0f;
-    m[9]=0.0f;
-    m[10]=z;
-    m[11]=0.0f;
+    m->data[8]=0.0f;
+    m->data[9]=0.0f;
+    m->data[10]=z;
+    m->data[11]=0.0f;
 
-    m[12]=0.0f;
-    m[13]=0.0f;
-    m[14]=0.0f;
-    m[15]=1.0f;
+    m->data[12]=0.0f;
+    m->data[13]=0.0f;
+    m->data[14]=0.0f;
+    m->data[15]=1.0f;
 
 }
 
-void bl_matrix_mult(float* m,float* a,float* b)
+void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
 {
 
 #ifdef OPT_SSE
@@ -218,10 +218,10 @@ void bl_matrix_mult(float* m,float* a,float* b)
 
     for (int i=0;i<16;i+=4) {
         for (int j=0;j<4;j++) {
-            m[i + j] = (b[i + 0] * a[j + 0])
-            + (b[i + 1] * a[j + 4])
-            + (b[i + 2] * a[j + 8])
-            + (b[i + 3] * a[j + 12]);
+            m->data[i + j] = (b->data[i + 0] * a->data[j + 0])
+            + (b->data[i + 1] * a->data[j + 4])
+            + (b->data[i + 2] * a->data[j + 8])
+            + (b->data[i + 3] * a->data[j + 12]);
         }
     }
     
@@ -229,10 +229,10 @@ void bl_matrix_mult(float* m,float* a,float* b)
 
 }
 
-void bl_matrix_print(const float* m)
+void bl_matrix_print(const bl_matrix_t* m)
 {
     for (int n=0;n<4;n++) {
     
-        printf("[%.2f %.2f %.2f %.2f]\n",m[n],m[n+4],m[n+8],m[n+12]);
+        printf("[%.2f %.2f %.2f %.2f]\n",m->data[n],m->data[n+4],m->data[n+8],m->data[n+12]);
     }
 }
