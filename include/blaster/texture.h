@@ -24,6 +24,8 @@
 extern "C" {
 #endif
 
+#include "color.h"
+
 #include <stdint.h>
 
 typedef struct {
@@ -53,14 +55,14 @@ bl_texture_t* bl_texture_new_from_data(int width,int height,uint8_t type,const v
 void bl_texture_delete(bl_texture_t* t);
 
 /*!
-    Sets a pixel
+    Sets a 32 bit pixel
 */
-void bl_texture_set_pixel(bl_texture_t* t,int x,int y,uint32_t pixel);
+void bl_texture_set_pixel(bl_texture_t* t,int x,int y,bl_pixel_t pixel);
 
 /*!
-    Gets a pixel
+    Gets a 32 bit pixel
 */
-uint32_t bl_texture_get_pixel(bl_texture_t* t,int x,int y);
+bl_pixel_t bl_texture_get_pixel(bl_texture_t* t,int x,int y);
 
 #ifdef __cplusplus
 }

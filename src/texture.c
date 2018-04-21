@@ -79,14 +79,14 @@ void bl_texture_delete(bl_texture_t* t)
     free(t);
 }
 
-void bl_texture_set_pixel(bl_texture_t* t,int x,int y,uint32_t pixel)
+void bl_texture_set_pixel(bl_texture_t* t,int x,int y,bl_pixel_t pixel)
 {
     uint32_t* ptr=t->data;
-    ptr[x+y*t->width]=pixel;
+    ptr[x+y*t->width]=pixel.value;
 }
 
-uint32_t bl_texture_get_pixel(bl_texture_t* t,int x,int y)
+bl_pixel_t bl_texture_get_pixel(bl_texture_t* t,int x,int y)
 {
     uint32_t* ptr=t->data;
-    return ptr[x+y*t->width];
+    return (bl_pixel_t)ptr[x+y*t->width];
 }

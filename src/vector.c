@@ -131,21 +131,21 @@ void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
     
     
     //R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
-    V=_mm_load_ps1(v);
-    M=_mm_loadu_ps(m);
+    V=_mm_load_ps1(v->data);
+    M=_mm_loadu_ps(m->data);
     R=_mm_mul_ps(V,M);
         
     for (size_t i=1;i<4;i++) {
         
         size_t j=i<<2;
         
-        V=_mm_load_ps1(v+i);
-        M=_mm_loadu_ps(m+j);
+        V=_mm_load_ps1(v->data+i);
+        M=_mm_loadu_ps(m->data+j);
         Q=_mm_mul_ps(V,M);
         R=_mm_add_ps(R,Q);
     }
     
-    _mm_store_ps(r,R);
+    _mm_store_ps(r->data,R);
 
 #else
 

@@ -197,21 +197,21 @@ void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
     __m128 Q;
     
     for (size_t i=0;i<16;i+=4) {
-        A=_mm_loadu_ps(a);
-        B=_mm_load_ps1(b+i);
+        A=_mm_loadu_ps(a->data);
+        B=_mm_load_ps1(b->data+i);
             
         R=_mm_mul_ps(A,B);
         
         for (size_t j=1;j<4;j++) {
             size_t k=j<<2;
-            A=_mm_loadu_ps(a+k);
-            B=_mm_load_ps1(b+i+j);
+            A=_mm_loadu_ps(a->data+k);
+            B=_mm_load_ps1(b->data+i+j);
             
             Q=_mm_mul_ps(A,B);
             R=_mm_add_ps(R,Q);
         }
         
-        _mm_store_ps(m+i,R);
+        _mm_store_ps(m->data+i,R);
     }
 
 #else
