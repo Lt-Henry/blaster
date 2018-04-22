@@ -50,7 +50,7 @@ bl_raster_t* bl_raster_new(int width,int height)
     raster->modelview=bl_matrix_stack_new(32);
     raster->projection=bl_matrix_stack_new(32);
     
-    bl_color_set(raster->clear_color,0.9f,0.9f,0.9f,1.0f);
+    bl_color_set(&raster->clear_color,0.9f,0.9f,0.9f,1.0f);
     
     raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
     //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
@@ -83,12 +83,12 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height)
     raster->depth_buffer=bl_texture_new(width,height,BL_TEXTURE_U16);
 }
 
-void bl_raster_set_clear_color(bl_raster_t* raster,float* color)
+void bl_raster_set_clear_color(bl_raster_t* raster,bl_color_t* color)
 {
-    raster->clear_color[0]=color[0];
-    raster->clear_color[1]=color[1];
-    raster->clear_color[2]=color[2];
-    raster->clear_color[3]=color[3];
+    raster->clear_color.r=color->r;
+    raster->clear_color.g=color->g;
+    raster->clear_color.b=color->b;
+    raster->clear_color.a=color->a;
 }
 
 void bl_raster_clear(bl_raster_t* raster)
@@ -142,7 +142,7 @@ void bl_raster_clear(bl_raster_t* raster)
     
 
 #else
-    uint32_t pixel=bl_color_get_pixel(raster->clear_color);
+    bl_pixel_t pixel=bl_color_get_pixel(&raster->clear_color);
 
     uint32_t* color = raster->color_buffer->data;
     uint16_t* depth = raster->depth_buffer->data;
@@ -150,7 +150,7 @@ void bl_raster_clear(bl_raster_t* raster)
     
     for (int j=0;j<raster->screen_height;j++) {
         for (int i=0;i<raster->screen_width;i++) {
-            color[i+j*raster->screen_width]=pixel;
+            color[i+j*raster->screen_width]=pixel.value;
             depth[i+j*raster->screen_width]=0xFFFF;
         }
     }

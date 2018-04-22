@@ -64,7 +64,7 @@ typedef struct {
     bl_matrix_stack_t* projection;
     
     /*! color used for clear */
-    float clear_color[4];
+    bl_color_t clear_color;
     
     bl_fragment_t* fragments;
     
@@ -90,7 +90,7 @@ void bl_raster_resize(bl_raster_t* raster,int width,int height);
 /*!
     Sets clear pixel color
 */
-void bl_raster_set_clear_color(bl_raster_t* raster,float* color);
+void bl_raster_set_clear_color(bl_raster_t* raster,bl_color_t* color);
 
 /*!
     Clear buffers
