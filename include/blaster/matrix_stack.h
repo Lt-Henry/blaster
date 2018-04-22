@@ -25,12 +25,13 @@
 extern "C" {
 #endif
 
+#include "matrix.h"
 
 typedef struct {
     int size;
     int index;
-    float* base;
-    float* matrix;
+    bl_matrix_t* base;
+    bl_matrix_t* matrix;
 } bl_matrix_stack_t;
 
 /*!
@@ -61,7 +62,7 @@ void bl_matrix_stack_load_identity(bl_matrix_stack_t* stack);
 /*!
     Mult top matrix
 */
-void bl_matrix_stack_mult(bl_matrix_stack_t* stack,float* m);
+void bl_matrix_stack_mult(bl_matrix_stack_t* stack,bl_matrix_t* m);
 
 /*!
     Performs a translation matrix multiplication
@@ -89,7 +90,7 @@ void bl_matrix_stack_rotate_z(bl_matrix_stack_t* stack,float angle);
 void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z);
 
 /*!
-
+    Performs a Frustum matrix multiplication
 */
 void bl_matrix_stack_frustum(bl_matrix_stack_t* stack,
                             float left,float right,

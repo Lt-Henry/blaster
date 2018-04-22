@@ -29,7 +29,7 @@ bl_matrix_stack_t* bl_matrix_stack_new(int size)
     stack=malloc(sizeof(bl_matrix_stack_t));
     
     stack->size=size;
-    stack->base=malloc(sizeof(float)*16*size);
+    stack->base=malloc(sizeof(bl_matrix_t)*size);
     stack->index=0;
     stack->matrix=stack->base;
     
@@ -48,10 +48,10 @@ int bl_matrix_stack_push(bl_matrix_stack_t* stack)
         return 0;
     }
     
-    bl_matrix_copy(stack->matrix+16,stack->matrix);
+    bl_matrix_copy(stack->matrix+1,stack->matrix);
     
     stack->index++;
-    stack->matrix+=16;
+    stack->matrix++;
     
     return 1;
 }
@@ -63,7 +63,7 @@ int bl_matrix_stack_pop(bl_matrix_stack_t* stack)
     }
     
     stack->index--;
-    stack->matrix-=16;
+    stack->matrix--;
     
     return 1;
 }
@@ -73,67 +73,67 @@ void bl_matrix_stack_load_identity(bl_matrix_stack_t* stack)
     bl_matrix_identity(stack->matrix);
 }
 
-void bl_matrix_stack_mult(bl_matrix_stack_t* stack,float* m)
+void bl_matrix_stack_mult(bl_matrix_stack_t* stack,bl_matrix_t* m)
 {
-    float a[16];
+    bl_matrix_t a;
 
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_mult(stack->matrix,a,m);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_mult(stack->matrix,&a,m);
 }
 
 void bl_matrix_stack_translate(bl_matrix_stack_t* stack,float x,float y,float z)
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_translate(b,x,y,z);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_translate(&b,x,y,z);
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 }
 
 void bl_matrix_stack_rotate_x(bl_matrix_stack_t* stack,float angle)
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_rotate_x(b,angle);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_rotate_x(&b,angle);
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 }
 
 void bl_matrix_stack_rotate_y(bl_matrix_stack_t* stack,float angle)
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_rotate_y(b,angle);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_rotate_y(&b,angle);
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 }
 
 void bl_matrix_stack_rotate_z(bl_matrix_stack_t* stack,float angle)
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_rotate_z(b,angle);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_rotate_z(&b,angle);
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 }
 
 void bl_matrix_stack_scale(bl_matrix_stack_t* stack,float x,float y,float z)
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
-    bl_matrix_scale(b,x,y,z);
+    bl_matrix_copy(&a,stack->matrix);
+    bl_matrix_scale(&b,x,y,z);
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 
 }
 
@@ -143,31 +143,31 @@ void bl_matrix_stack_frustum(bl_matrix_stack_t* stack,
                             float near,float far
                             )
 {
-    float a[16];
-    float b[16];
+    bl_matrix_t a;
+    bl_matrix_t b;
     
-    bl_matrix_copy(a,stack->matrix);
+    bl_matrix_copy(&a,stack->matrix);
     
-    b[0]=(2.0f*near)/(right-left);
-    b[1]=0.0f;
-    b[2]=0.0f;
-    b[3]=0.0f;
+    b.data[0]=(2.0f*near)/(right-left);
+    b.data[1]=0.0f;
+    b.data[2]=0.0f;
+    b.data[3]=0.0f;
     
-    b[4]=0.0f;
-    b[5]=(2.0f*near)/(top-bottom);
-    b[6]=0.0f;
-    b[7]=0.0f;
+    b.data[4]=0.0f;
+    b.data[5]=(2.0f*near)/(top-bottom);
+    b.data[6]=0.0f;
+    b.data[7]=0.0f;
     
-    b[8]=(right+left)/(right-left);
-    b[9]=(top+bottom)/(top-bottom);
-    b[10]=-(far+near)/(far-near);
-    b[11]=-1;
+    b.data[8]=(right+left)/(right-left);
+    b.data[9]=(top+bottom)/(top-bottom);
+    b.data[10]=-(far+near)/(far-near);
+    b.data[11]=-1;
     
-    b[12]=0.0f;
-    b[13]=0.0f;
-    b[14]=-(2.0f*far*near)/(far-near);
-    b[15]=0.0f;
+    b.data[12]=0.0f;
+    b.data[13]=0.0f;
+    b.data[14]=-(2.0f*far*near)/(far-near);
+    b.data[15]=0.0f;
     
-    bl_matrix_mult(stack->matrix,a,b);
+    bl_matrix_mult(stack->matrix,&a,&b);
 }
 
