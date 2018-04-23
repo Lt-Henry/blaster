@@ -28,12 +28,12 @@
 
 #endif
 
-void bl_vector_set(float* v,float x,float y,float z,float w)
+void bl_vector_set(bl_vector_t* v,float x,float y,float z,float w)
 {
-    v[0]=x;
-    v[1]=y;
-    v[2]=z;
-    v[3]=w;
+    v->x=x;
+    v->y=y;
+    v->z=z;
+    v->w=w;
 }
 
 void bl_vector_copy(bl_vector_t* d,bl_vector_t* s)

@@ -43,7 +43,7 @@ void bl_color_add(bl_color_t* c,bl_color_t* a,bl_color_t* b)
     c->a = a->a + b->a;
 }
 
-void bl_color_sub(float* c,float* a,float* b)
+void bl_color_sub(bl_color_t* c,bl_color_t* a,bl_color_t* b)
 {
     c->r = a->r - b->r;
     c->g = a->g - b->g;

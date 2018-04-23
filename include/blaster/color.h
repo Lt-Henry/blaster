@@ -57,7 +57,7 @@ void bl_color_add(bl_color_t* c,bl_color_t* a,bl_color_t* b);
 /*!
     Substracts two colors
 */
-void bl_color_sub(bl_color_t* c,b_color_t* a,bl_color_t* b);
+void bl_color_sub(bl_color_t* c,bl_color_t* a,bl_color_t* b);
 
 /*!
     Mult a color by a scalar
