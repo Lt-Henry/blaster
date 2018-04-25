@@ -24,44 +24,25 @@
 #include <stdarg.h>
 
 
-bl_vbo_t* bl_vbo_new(size_t size,uint8_t attributes[16])
+bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size)
 {
     bl_vbo_t* vbo=NULL;
 
     vbo=malloc(sizeof(bl_vbo_t));
 
     vbo->size=size;
+    vbo->vertex_size=vertex_size;
     
-    for (int n=0;n<16;n+=2) {
-        
-        uint8_t atype = attributes[n];
-        uint8_t anum = attributes[n+1];
-        
-        uint8_t bytes = atype >> 4;
-        
-        vbo->attrib_type[n/2] = atype;
-        vbo->attrib_size[n/2] = anum;
-        
-        if (atype>0 && anum>0) {
-            vbo->data[n/2] = aligned_alloc(16,bytes*size*anum);
-        }
-        else {
-            vbo->data[n/2] = NULL;
-        }
-        
-    }
+    uint8_t* p = aligned_alloc(16,size*vertex_size);
     
-
+    vbo->data=p;
+    
     return vbo;
 }
 
 void bl_vbo_delete(bl_vbo_t* vbo)
 {
-    for (int n=0;n<8;n++) {
-        if (vbo->data[n]!=NULL) {
-            free(vbo->data[n]);
-        }
-    }
+    free(vbo->data);
     free(vbo);
 }
 

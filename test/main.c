@@ -53,54 +53,54 @@ int main(int argc,char* argv[])
     
     printf("\ntesting color module:\n\n");
     
-    float c1[4];
-    float c2[4];
-    float c3[4];
+    bl_color_t c1;
+    bl_color_t c2;
+    bl_color_t c3;
     
-    bl_color_set(c1,0.0f,1.0f,0.0f,1.0f);
-    bl_color_set(c2,1.0f,0.0f,1.0f,0.0f);
+    bl_color_set(&c1,0.0f,1.0f,0.0f,1.0f);
+    bl_color_set(&c2,1.0f,0.0f,1.0f,0.0f);
     
-    bl_color_add(c3,c1,c2);
+    bl_color_add(&c3,&c1,&c2);
     
     
-    printf("bl_color_add: %.2f %.2f %.2f %.2f\n",c3[0],c3[1],c3[2],c3[3]);
-    printf("bl_color_get_pixel: %X\n",bl_color_get_pixel(c1));
+    printf("bl_color_add: %.2f %.2f %.2f %.2f\n",c3.r,c3.g,c3.b,c3.a);
+    printf("bl_color_get_pixel: %X\n",bl_color_get_pixel(&c1));
 
 
-    float v1[4];
-    float v2[4];
-    float v3[4];
+    bl_vector_t v1;
+    bl_vector_t v2;
+    bl_vector_t v3;
     
     float value;
     
     printf("\ntesting vector and matrix modules:\n\n");
     
-    bl_vector_set(v1,0.0f,1.0f,0.0f,1.0f);
-    bl_vector_set(v2,1.0f,0.0f,1.0f,0.0f);
+    bl_vector_set(&v1,0.0f,1.0f,0.0f,1.0f);
+    bl_vector_set(&v2,1.0f,0.0f,1.0f,0.0f);
     
-    bl_vector_add(v3,v1,v2);
+    bl_vector_add(&v3,&v1,&v2);
     
-    printf("bl_vector_add: %.2f %.2f %.2f %.2f\n",v3[0],v3[1],v3[2],v3[3]);
+    printf("bl_vector_add: %.2f %.2f %.2f %.2f\n",v3.x,v3.y,v3.z,v3.w);
     
-    bl_vector_set(v1,2.0f,2.0f,2.0f,0.0f);
-    bl_vector_normalize (v1);
+    bl_vector_set(&v1,2.0f,2.0f,2.0f,0.0f);
+    bl_vector_normalize(&v1);
 
-    printf("bl_vector_normalize: %.2f %.2f %.2f %.2f\n",v1[0],v1[1],v1[2],v1[3]);
+    printf("bl_vector_normalize: %.2f %.2f %.2f %.2f\n",v1.x,v1.y,v1.z,v1.w);
     
-    value=bl_vector_norm(v1);
+    value=bl_vector_norm(&v1);
 
     printf("bl_vector_norm: %.2f\n",value);
 
     
-    bl_vector_set(v1,4.0f,0.0f,0.0f,0.0f);
+    bl_vector_set(&v1,4.0f,0.0f,0.0f,0.0f);
     
-    float m1[16];
-    float m2[16];
-    float m3[16];
+    bl_matrix_t m1;
+    bl_matrix_t m2;
+    bl_matrix_t m3;
     
-    bl_matrix_rotate_x(m1,1.0f);
-    bl_matrix_rotate_y(m2,1.0f);
-    bl_matrix_identity(m3);
+    bl_matrix_rotate_x(&m1,1.0f);
+    bl_matrix_rotate_y(&m2,1.0f);
+    bl_matrix_identity(&m3);
     
     
     printf("perfomance test:");
@@ -110,25 +110,25 @@ int main(int argc,char* argv[])
     clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     
     for (int n=0;n<0x2ffffff;n++) {
-        bl_matrix_mult(m3,m1,m2);
-        bl_vector_mult(v2,v1,m3);
+        bl_matrix_mult(&m3,&m1,&m2);
+        bl_vector_mult(&v2,&v1,&m3);
     }
     
     clock_gettime(CLOCK_MONOTONIC_RAW, &end);
 
     printf("%ld ms\n",get_ms(start,end));
-    value=bl_vector_norm(v2);
+    value=bl_vector_norm(&v2);
     
     
-    printf("v2: %.2f %.2f %.2f %.2f\n",v2[0],v2[1],v2[2],v2[3]);
+    printf("v2: %.2f %.2f %.2f %.2f\n",v2.x,v2.y,v2.z,v2.w);
     printf("distance: %.2f\n",value);
     
     printf("m1:\n");
-    bl_matrix_print(m1);
+    bl_matrix_print(&m1);
     printf("m2:\n");
-    bl_matrix_print(m2);
+    bl_matrix_print(&m2);
     printf("m3:\n");
-    bl_matrix_print(m3);
+    bl_matrix_print(&m3);
     
     printf("\ntesting raster:\n");
     
