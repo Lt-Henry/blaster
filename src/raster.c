@@ -201,55 +201,60 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
     // point rendering
 
-    float clip[4];
-    float ndc[4];
+    bl_vector_t clip;
+    bl_vector_t ndc;
     uint32_t win[4];
+    
+    typedef struct {
+        bl_vector_t pos;
+        bl_color_t color;
+    } point_t;
 
-    float* vertex = vbo->data[0];
-    float* color = vbo->data[1];
+    point_t* source = (point_t*) vbo->data;
+    
     
     bl_fragment_t* fragment=raster->fragments;
     
     
-    const float wl[4] = {
-        raster->screen_width/2.0f,
-        raster->screen_height/2.0f,
-        65535/2.0f,
-        0.0f
-        };
+    bl_vector_t wl;
+    
+    wl.x=raster->screen_width/2.0f;
+    wl.y=raster->screen_height/2.0f;
+    wl.z=65535/2.0f;
+    wl.w=0.0f;
+        
         
 
-    float matrix[16];
+    bl_matrix_t matrix;
     
     // precompute modelview and projection matrix
-    bl_matrix_mult(matrix,raster->projection->matrix,raster->modelview->matrix);
+    bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
-    for (int n=0;n<vbo->size;n++,vertex+=4,color+=4) {
+    for (int n=0;n<vbo->size;n++) {
         
         //clip coordinates
-        bl_vector_mult(clip,vertex,matrix);
+        bl_vector_mult(&clip,&source[n].pos,&matrix);
         //__builtin_prefetch(color);
         //w-divide for NDC coordinates
-        float w=1.0f/clip[3];
+        float w=1.0f/clip.w;
         
-        ndc[0]=clip[0]*w;
-        ndc[1]=clip[1]*w;
-        ndc[2]=clip[2]*w;
-        ndc[3]=clip[3]*w;
+        ndc.x=clip.x*w;
+        ndc.y=clip.y*w;
+        ndc.z=clip.z*w;
+        ndc.w=clip.w*w;
         
         //bl_vector_copy(ndc,clip);
         //bl_vector_scale(ndc,w);
         
         //clip out of range z
-        if (ndc[2]<-1.0f || ndc[2]>1.0f) {
+        if (ndc.z<-1.0f || ndc.z>1.0f) {
             continue;
         }
         
-        // viewport
-
-        win[0]=(ndc[0]*wl[0])+wl[0];
-        win[1]=(ndc[1]*wl[1])+wl[1];
-        win[2]=(ndc[2]*wl[2])+wl[2];
+        // viewport (FMA here?)
+        win[0]=(ndc.x*wl.x)+wl.z;
+        win[1]=(ndc.y*wl.y)+wl.y;
+        win[2]=(ndc.z*wl.z)+wl.z;
         
         /*
         __m128 N;
@@ -273,7 +278,8 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         fragment->x=win[0];
         fragment->y=win[1];
         fragment->depth=win[2];
-        fragment->pixel=bl_color_get_pixel(color);
+        bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
+        fragment->pixel=pixel.value;
         /*
         __m128i W;
         W=_mm_loadu_si128(win);

@@ -27,7 +27,7 @@ extern "C" {
 
 #include "matrix.h"
 
-typedef union {
+typedef union bl_vector_u {
 
     float data[4];
     

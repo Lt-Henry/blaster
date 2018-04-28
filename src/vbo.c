@@ -22,6 +22,7 @@
 #include <blaster/constants.h>
 
 #include <stdarg.h>
+#include <string.h>
 
 
 bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size)
@@ -46,17 +47,17 @@ void bl_vbo_delete(bl_vbo_t* vbo)
     free(vbo);
 }
 
-
-void bl_vbo_set(bl_vbo_t* vbo,int attrib,int index,void* value)
+void bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
 {
 
-    uint8_t* source = value;
-    uint8_t* dest = vbo->data[attrib];
+    if (index>=vbo->size) {
+        return;
+    }
     
-    size_t bytes = vbo->attrib_type[attrib]>>4;
+    uint8_t* dest = (uint8_t*)vbo->data;
     
-    dest+=(bytes*index*vbo->attrib_size[attrib]);
+    dest+=vbo->vertex_size*index;
     
-    memcpy(dest,source,vbo->attrib_size[attrib]*bytes);
+    memcpy(dest,value,vbo->vertex_size);
     
 }

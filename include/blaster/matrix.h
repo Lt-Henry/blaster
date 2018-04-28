@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-typedef struct {
+typedef struct bl_matrix_u {
     float data[16];
 } bl_matrix_t;
 

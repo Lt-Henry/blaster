@@ -64,7 +64,7 @@ int main(int argc,char* argv[])
     
     
     printf("bl_color_add: %.2f %.2f %.2f %.2f\n",c3.r,c3.g,c3.b,c3.a);
-    printf("bl_color_get_pixel: %X\n",bl_color_get_pixel(&c1));
+    printf("bl_color_get_pixel: %X\n",bl_color_get_pixel(&c1).value);
 
 
     bl_vector_t v1;
@@ -134,35 +134,36 @@ int main(int argc,char* argv[])
     
     bl_raster_t* raster = bl_raster_new(1024,768);
     
-    //1000 vertices with 8 attributes (pos,color)
-    uint8_t attribs[16] = { BL_F32,4,
-                            BL_F32,4,
-                            0,0,0,0,0,0,0,0,0,0,0,0 };
-                            
-    bl_vbo_t* points = bl_vbo_new(1000,attribs);
+    struct {
+        bl_vector_t pos;
+        bl_color_t color;
+    } vertex;
+    
+    bl_vbo_t* points = bl_vbo_new(1000,sizeof(vertex));
     
     double alpha=0.0;
     float step=0.0f;
+    vertex.color.r=1.0f;
+    vertex.color.g=0.0f;
+    vertex.color.b=0.0f;
+    vertex.color.a=1.0f;
+    
     for (int n=0;n<1000;n++) {
-        float pos[4];
-        pos[0] = cos(alpha);
-        pos[1] = sin(alpha);
-        pos[2]= -(10.0f+step);
-        pos[3]=1.0f;
-        
-        float color[4]={1.0f,0.0f,0.0f,1.0f};
+        vertex.pos.x=cos(alpha);
+        vertex.pos.y=sin(alpha);
+        vertex.pos.z=-(10.0f+step);
+        vertex.pos.w=1.0f;
         
         alpha+=0.1;
         step+=0.1f;
         
-        bl_vbo_set(points,0,n,pos);
-        bl_vbo_set(points,1,n,color);
+        bl_vbo_set(points,n,&vertex);
     }
     
     
     //set background color (#839496)
-    bl_color_from_ub(c1,0x83,0x94,0x96,0xff);
-    bl_raster_set_clear_color(raster,c1);
+    bl_color_from_ub(&c1,0x83,0x94,0x96,0xff);
+    bl_raster_set_clear_color(raster,&c1);
     
     //clear
     bl_raster_clear(raster);
@@ -172,7 +173,7 @@ int main(int argc,char* argv[])
     bl_matrix_stack_frustum(raster->projection,-1,1,-1,1,10,100);
     
     bl_raster_draw_points(raster,points);
-    
+    bl_raster_update(raster);
     
     //save output
     bl_tga_save(raster->color_buffer,"color.tga");

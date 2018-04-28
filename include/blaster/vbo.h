@@ -52,6 +52,9 @@ bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size);
 void bl_vbo_delete(bl_vbo_t* vbo);
 
 
+/*!
+    Sets a vertex with all it's attributes
+*/
 void bl_vbo_set(bl_vbo_t* vbo,int index,void* value);
 
 #ifdef __cplusplus

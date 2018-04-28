@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-typedef union {
+typedef union bl_color_u {
     
     float channel[4];
     
@@ -39,7 +39,7 @@ typedef union {
     
 } bl_color_t;
 
-typedef union {
+typedef union bl_pixel_u {
     uint32_t value;
     uint8_t channel[4];
 } bl_pixel_t;
