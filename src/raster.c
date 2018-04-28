@@ -252,7 +252,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         }
         
         // viewport (FMA here?)
-        win[0]=(ndc.x*wl.x)+wl.z;
+        win[0]=(ndc.x*wl.x)+wl.x;
         win[1]=(ndc.y*wl.y)+wl.y;
         win[2]=(ndc.z*wl.z)+wl.z;
         
