@@ -96,7 +96,7 @@ void bl_raster_clear(bl_raster_t* raster)
 
 #ifdef OPT_SSE
     
-    uint32_t pixel=bl_color_get_pixel(raster->clear_color);
+    uint32_t pixel=bl_color_get_pixel(&raster->clear_color).value;
 
     size_t len = raster->screen_width*raster->screen_height;
 
@@ -155,6 +155,8 @@ void bl_raster_clear(bl_raster_t* raster)
         }
     }
 #endif
+    //clear fragment buffer
+    raster->fragments[0].x=0xffff;
 }
 
 void bl_raster_update(bl_raster_t* raster)
@@ -212,9 +214,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
     point_t* source = (point_t*) vbo->data;
     
-    
     bl_fragment_t* fragment=raster->fragments;
-    
     
     bl_vector_t wl;
     
@@ -222,9 +222,8 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
     wl.y=raster->screen_height/2.0f;
     wl.z=65535/2.0f;
     wl.w=0.0f;
-        
-        
-
+    
+    
     bl_matrix_t matrix;
     
     // precompute modelview and projection matrix
@@ -280,6 +279,15 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         fragment->depth=win[2];
         bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
         fragment->pixel=pixel.value;
+        
+        /*
+        bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
+        win[3]=pixel.value;
+      
+        __m128i W;
+        W=_mm_loadu_si128(win);
+        _mm_stream_si128((__m128i*)fragment,W);
+        */
         /*
         __m128i W;
         W=_mm_loadu_si128(win);
@@ -292,7 +300,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         zbuffer+=(win[0]+win[1]*raster->screen_width);
 
         if (win[2]<*zbuffer) {
-            uint32_t pixel=bl_color_get_pixel(color);
+            bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
            
             bl_texture_set_pixel(raster->color_buffer,
                 win[0],win[1],

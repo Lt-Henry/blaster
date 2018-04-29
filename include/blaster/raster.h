@@ -24,8 +24,6 @@
 extern "C" {
 #endif
 
-#include "tile.h"
-#include "command.h"
 
 #include "constants.h"
 #include "texture.h"
@@ -33,7 +31,7 @@ extern "C" {
 #include "matrix_stack.h"
 #include "vbo.h"
 
-typedef struct {
+typedef struct bl_fragment_u {
     uint32_t x;
     uint32_t y;
     uint32_t depth;
