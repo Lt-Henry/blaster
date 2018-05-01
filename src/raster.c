@@ -319,8 +319,89 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
     fragment->y=0xffff;
 }
 
+static void swap(uint32_t* a,uint32_t* b)
+{
+    uint32_t tmp = *a;
+    *b=*a;
+    *a=tmp;
+}
+
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 {
+    typedef struct {
+        bl_vector_t pos;
+        bl_color_t color;
+    } point_t;
 
+    point_t* source = (point_t*) vbo->data;
 
+    bl_matrix_t matrix;
+    
+    // precompute modelview and projection matrix
+    bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
+    
+    bl_vector_t clip[2];
+    bl_vector_t ndc[2];
+    
+    bl_vector_t wl;
+    
+    wl.x=raster->screen_width/2.0f;
+    wl.y=raster->screen_height/2.0f;
+    wl.z=65535/2.0f;
+    wl.w=0.0f;
+    
+    uint32_t w1[4];
+    uint32_t w2[4];
+    
+    for (int n=0;n<vbo->size;n+=2) {
+        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
+        bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
+        
+        float w=1.0f/clip[0].w;
+        
+        ndc[0].x=clip[0].x*w;
+        ndc[0].y=clip[0].y*w;
+        ndc[0].z=clip[0].z*w;
+        ndc[0].w=clip[0].w*w;
+        
+        w=1.0f/clip[1].w;
+        
+        ndc[1].x=clip[1].x*w;
+        ndc[1].y=clip[1].y*w;
+        ndc[1].z=clip[1].z*w;
+        ndc[1].w=clip[1].w*w;
+        
+        //HACK, lines should be tesselated
+        if (ndc[0].z<-1.0f || ndc[0].z>1.0f || ndc[1].z<-1.0f || ndc[1].z>1.0f) {
+            continue;
+        }
+        
+        w1[0]=(ndc[0].x*wl[0].x)+wl[0].x;
+        w1[1]=(ndc[0].y*wl[0].y)+wl[0].y;
+        w1[2]=(ndc[0].z*wl[0].z)+wl[0].z;
+        
+        w2[0]=(ndc[1].x*wl[1].x)+wl[1].x;
+        w2[1]=(ndc[1].y*wl[1].y)+wl[1].y;
+        w2[2]=(ndc[1].z*wl[1].z)+wl[1].z;
+        
+        int x1 = w1[0];
+        int y1 = w1[1];
+        
+        int x2 = w2[0];
+        int y2 = w2[1];
+        
+        const int step = fabs(y2-y1) > fabs(x2-x1);
+        
+        if (step) {
+            swap(&x1,&y1);
+            swap(&x2,&y2);
+        }
+        
+        if (x1>x2) {
+            swap(&x1,&x2);
+            swap(&y1,&y2);
+        }
+        
+        
+    }
 }
