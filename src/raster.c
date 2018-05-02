@@ -34,6 +34,9 @@
 
 #endif
 
+#define MAX(a,b) ((a) > (b) ? a : b)
+#define MIN(a,b) ((a) < (b) ? a : b)
+
 
 bl_raster_t* bl_raster_new(int width,int height)
 {
@@ -334,6 +337,8 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     } point_t;
 
     point_t* source = (point_t*) vbo->data;
+    
+    bl_fragment_t* fragment=raster->fragments;
 
     bl_matrix_t matrix;
     
@@ -376,13 +381,13 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
             continue;
         }
         
-        w1[0]=(ndc[0].x*wl[0].x)+wl[0].x;
-        w1[1]=(ndc[0].y*wl[0].y)+wl[0].y;
-        w1[2]=(ndc[0].z*wl[0].z)+wl[0].z;
+        w1[0]=(ndc[0].x*wl.x)+wl.x;
+        w1[1]=(ndc[0].y*wl.y)+wl.y;
+        w1[2]=(ndc[0].z*wl.z)+wl.z;
         
-        w2[0]=(ndc[1].x*wl[1].x)+wl[1].x;
-        w2[1]=(ndc[1].y*wl[1].y)+wl[1].y;
-        w2[2]=(ndc[1].z*wl[1].z)+wl[1].z;
+        w2[0]=(ndc[1].x*wl.x)+wl.x;
+        w2[1]=(ndc[1].y*wl.y)+wl.y;
+        w2[2]=(ndc[1].z*wl.z)+wl.z;
         
         int x1 = w1[0];
         int y1 = w1[1];
@@ -390,11 +395,15 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         int x2 = w2[0];
         int y2 = w2[1];
         
-        const int step = fabs(y2-y1) > fabs(x2-x1);
+        int xlimit=raster->screen_width;
+        int ylimit=raster->screen_height;
+        
+        const int step = abs(y2-y1) > abs(x2-x1);
         
         if (step) {
             swap(&x1,&y1);
             swap(&x2,&y2);
+            swap(&xlimit,&ylimit);
         }
         
         if (x1>x2) {
@@ -402,6 +411,55 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
             swap(&y1,&y2);
         }
         
+        if (x1>xlimit || y1>ylimit) {
+            continue;
+        }
+        
+        if (x2<0 || y2<0) {
+            continue;
+        }
+        
+        x1=MAX(x1,0);
+        x2=MIN(x2,xlimit);
+        y1=MAX(y1,0);
+        y2=MIN(y2,ylimit);
+        
+        const int dx = x2 - x1;
+        const int dy = abs(y2 - y1);
+        
+        int error = dx / 2;
+        const int ystep = (y1 < y2) ? 1 : -1;
+        int y = y1;
+        
+        const int maxX = x2;
+        
+        for (int x=x1; x<maxX; x++) {
+
+            fragment->depth=32;
+            bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
+            fragment->pixel=pixel.value;
+            
+            if (step) {
+                fragment->x=y;
+                fragment->y=x;
+            }
+            else {
+                fragment->x=x;
+                fragment->y=y;
+            }
+            
+            error -= dy;
+            if (error < 0) {
+                y += ystep;
+                error += dx;
+            }
+            
+            fragment++;
+        }
+        
+        
         
     }
+        fragment->x=0xffff;
+    fragment->y=0xffff;
 }
