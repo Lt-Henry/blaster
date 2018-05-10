@@ -32,9 +32,9 @@ extern "C" {
 #include "vbo.h"
 
 typedef struct bl_fragment_u {
-    uint32_t x;
-    uint32_t y;
-    uint32_t depth;
+    uint16_t x;
+    uint16_t y;
+    uint16_t depth;
     uint32_t pixel;
 } bl_fragment_t;
 
@@ -67,6 +67,8 @@ typedef struct {
     bl_fragment_t* fragments;
     
     size_t num_fragments;
+    
+    size_t fragment;
     
 } bl_raster_t;
 

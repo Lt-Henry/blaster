@@ -28,6 +28,8 @@
 
 #ifdef OPT_SSE
 
+#warning "Using SSE optimization"
+
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <emmintrin.h>
@@ -36,6 +38,17 @@
 
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
+
+static void put_fragment(bl_raster_t* raster,uint16_t x,uint16_t y,uint16_t depth,bl_pixel_t pixel)
+{
+    if (raster->fragment<raster->num_fragments-1) {
+        raster->fragments[raster->fragment].x=x;
+        raster->fragments[raster->fragment].y=y;
+        raster->fragments[raster->fragment].depth=depth;
+        raster->fragments[raster->fragment].pixel=pixel.value;
+        raster->fragment++;
+    }
+}
 
 
 bl_raster_t* bl_raster_new(int width,int height)
@@ -159,21 +172,14 @@ void bl_raster_clear(bl_raster_t* raster)
     }
 #endif
     //clear fragment buffer
-    raster->fragments[0].x=0xffff;
+    raster->fragment=0;
 }
 
 void bl_raster_update(bl_raster_t* raster)
 {
-    bl_fragment_t* fragment=raster->fragments;
     
-    while (1) {
-    
-        if (fragment->x==0xffff) {
-            break;
-        }
-        
-        
-        size_t offset=fragment->x+fragment->y*raster->screen_width;
+    for (size_t n=0;n<raster->fragment;n++) {
+        size_t offset=raster->fragments[n].x+raster->fragments[n].y*raster->screen_width;
         
         uint16_t* zbuffer=raster->depth_buffer->data;
         zbuffer+=offset;
@@ -181,14 +187,13 @@ void bl_raster_update(bl_raster_t* raster)
         uint32_t* cbuffer=raster->color_buffer->data;
         cbuffer+=offset;
 
-        if (fragment->depth<*zbuffer) {
+        if (raster->fragments[n].depth<*zbuffer) {
             
-            *zbuffer=fragment->depth;
-            *cbuffer=fragment->pixel;
+            *zbuffer=raster->fragments[n].depth;
+            *cbuffer=raster->fragments[n].pixel;
         }
-        
-        fragment++;
     }
+    
 }
 
 int bl_raster_get_width(bl_raster_t* raster)
@@ -217,7 +222,6 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
 
     point_t* source = (point_t*) vbo->data;
     
-    bl_fragment_t* fragment=raster->fragments;
     
     bl_vector_t wl;
     
@@ -277,11 +281,9 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
             continue;
         }
         
-        fragment->x=win[0];
-        fragment->y=win[1];
-        fragment->depth=win[2];
         bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
-        fragment->pixel=pixel.value;
+
+        put_fragment(raster,win[0],win[1],win[2],pixel);
         
         /*
         bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
@@ -296,7 +298,6 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         W=_mm_loadu_si128(win);
         _mm_storeu_si128((uint32_t*)fragment,W);
         */
-        fragment++;
         
         /*
         uint16_t* zbuffer=raster->depth_buffer->data;
@@ -318,15 +319,13 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
         
     }
     
-    fragment->x=0xffff;
-    fragment->y=0xffff;
 }
 
 static void swap(uint32_t* a,uint32_t* b)
 {
     uint32_t tmp = *a;
-    *b=*a;
-    *a=tmp;
+    *a=*b;
+    *b=tmp;
 }
 
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
@@ -338,7 +337,6 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 
     point_t* source = (point_t*) vbo->data;
     
-    bl_fragment_t* fragment=raster->fragments;
 
     bl_matrix_t matrix;
     
@@ -389,14 +387,18 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         w2[1]=(ndc[1].y*wl.y)+wl.y;
         w2[2]=(ndc[1].z*wl.z)+wl.z;
         
+        float rz1 =1.0f/ndc[0].z;
+        float rz2 =1.0f/ndc[1].z;
+        
         int x1 = w1[0];
         int y1 = w1[1];
         
         int x2 = w2[0];
         int y2 = w2[1];
         
-        int xlimit=raster->screen_width;
-        int ylimit=raster->screen_height;
+        int xlimit=raster->screen_width-1;
+        int ylimit=raster->screen_height-1;
+        
         
         const int step = abs(y2-y1) > abs(x2-x1);
         
@@ -433,19 +435,15 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         
         const int maxX = x2;
         
+        bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
+        
         for (int x=x1; x<maxX; x++) {
-
-            fragment->depth=32;
-            bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
-            fragment->pixel=pixel.value;
             
             if (step) {
-                fragment->x=y;
-                fragment->y=x;
+                put_fragment(raster,y,x,w1[2],pixel);
             }
             else {
-                fragment->x=x;
-                fragment->y=y;
+                put_fragment(raster,x,y,w1[2],pixel);
             }
             
             error -= dy;
@@ -454,12 +452,8 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
                 error += dx;
             }
             
-            fragment++;
+            
         }
         
-        
-        
     }
-        fragment->x=0xffff;
-    fragment->y=0xffff;
 }
