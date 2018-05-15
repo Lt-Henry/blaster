@@ -19,6 +19,9 @@
 
 #include <blaster/queue.h>
 
+#include <string.h>
+
+
 bl_queue_t* bl_queue_new(int size,size_t bucket_size)
 {
     bl_queue_t* queue=NULL;
@@ -43,18 +46,41 @@ void bl_queue_delete(bl_queue_t* queue)
     free(queue);
 }
 
-void bl_queue_push(bl_queue_t* queue,void* value)
+int bl_queue_push(bl_queue_t* queue,void* value)
 {
+    int ret;
+    
+    pthread_mutex_lock(queue->mutex);
+    
+    if (queue->size < queue->capacity) {
+        queue->size++;
+        queue->end=(queue->end+1)%queue->capacity;
+        //queue->data[queue->end]=cmd;
+        ret=0;
+    }
+    else {
+        ret=1;
+    }
+    
+    pthread_mutex_unlock(queue->mutex);
+    
+    return ret;
 }
 
-void bl_queue_pop(bl_queue_t* queue,void* value)
+int bl_queue_pop(bl_queue_t* queue,void* value)
 {
-}
-
-void bl_queue_top(bl_queue_t* queue,void* value)
-{
+    pthread_mutex_lock(queue->mutex);
+    
+    pthread_mutex_unlock(queue->mutex);
 }
 
 void bl_queue_clear(bl_queue_t* queue)
 {
+    pthread_mutex_lock(queue->mutex);
+    
+    queue->size=0;
+    queue->begin=1;
+    queue->end=0;
+    
+    pthread_mutex_unlock(queue->mutex);
 }

@@ -43,11 +43,9 @@ bl_queue_t* bl_queue_new(int size,size_t bucket_size);
 
 void bl_queue_delete(bl_queue_t* queue);
 
-void bl_queue_push(bl_queue_t* queue,void* value);
+int bl_queue_push(bl_queue_t* queue,void* value);
 
-void bl_queue_pop(bl_queue_t* queue,void* value);
-
-void bl_queue_top(bl_queue_t* queue,void* value);
+int bl_queue_pop(bl_queue_t* queue,void* value);
 
 void bl_queue_clear(bl_queue_t* queue);
 
