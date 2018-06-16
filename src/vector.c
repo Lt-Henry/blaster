@@ -17,16 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <blaster/optimization.h>
 #include <blaster/vector.h>
 
 #include <math.h>
 
-#ifdef OPT_SSE
 
-#include <xmmintrin.h>
-#include <pmmintrin.h>
-
-#endif
 
 void bl_vector_set(bl_vector_t* v,float x,float y,float z,float w)
 {
@@ -119,10 +115,9 @@ void bl_vector_homogeneus(bl_vector_t* v)
     v->w=1.0f;
 }
 
+#ifdef BLASTER_VECTOR_MULT_SSE
 void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
 {
-
-#ifdef OPT_SSE
     
     __m128 V;
     __m128 M;
@@ -147,16 +142,19 @@ void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
     
     _mm_store_ps(r->data,R);
 
-#else
+}
+#endif
 
-
+#ifdef BLASTER_VECTOR_MULT_GENERIC
+void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
+{
     r->x= (m->data[4*0+0] * v->x) + (m->data[4*1+0] * v->y) + (m->data[4*2+0] * v->z) + (m->data[4*3+0] * v->w);
     r->y= (m->data[4*0+1] * v->x) + (m->data[4*1+1] * v->y) + (m->data[4*2+1] * v->z) + (m->data[4*3+1] * v->w);
     r->z= (m->data[4*0+2] * v->x) + (m->data[4*1+2] * v->y) + (m->data[4*2+2] * v->z) + (m->data[4*3+2] * v->w);
     r->w= (m->data[4*0+3] * v->x) + (m->data[4*1+3] * v->y) + (m->data[4*2+3] * v->z) + (m->data[4*3+3] * v->w);
     
-#endif
 }
+#endif
 
 void bl_vector_scale(bl_vector_t* v,float s)
 {

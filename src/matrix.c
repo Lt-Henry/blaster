@@ -17,17 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <blaster/optimization.h>
 #include <blaster/matrix.h>
 
 #include <math.h>
 #include <stdio.h>
 
-#ifdef OPT_SSE
-
-#include <xmmintrin.h>
-#include <pmmintrin.h>
-
-#endif
 
 void bl_matrix_set(bl_matrix_t* m,int r,int c,float v)
 {
@@ -186,11 +181,9 @@ void bl_matrix_scale(bl_matrix_t* m,float x,float y,float z)
 
 }
 
+#ifdef BLASTER_MATRIX_MULT_SSE
 void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
 {
-
-#ifdef OPT_SSE
-
     __m128 A;
     __m128 B;
     __m128 R;
@@ -213,9 +206,12 @@ void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
         
         _mm_store_ps(m->data+i,R);
     }
+}
+#endif
 
-#else
-
+#ifdef BLASTER_MATRIX_MULT_GENERIC
+void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
+{
     for (int i=0;i<16;i+=4) {
         for (int j=0;j<4;j++) {
             m->data[i + j] = (b->data[i + 0] * a->data[j + 0])
@@ -224,10 +220,8 @@ void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
             + (b->data[i + 3] * a->data[j + 12]);
         }
     }
-    
-#endif
-
 }
+#endif
 
 void bl_matrix_print(const bl_matrix_t* m)
 {

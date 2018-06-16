@@ -17,6 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <blaster/optimization.h>
 #include <blaster/raster.h>
 #include <blaster/constants.h>
 #include <blaster/color.h>
@@ -25,16 +26,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef OPT_SSE
-
-#warning "Using SSE optimization"
-
-#include <xmmintrin.h>
-#include <pmmintrin.h>
-#include <emmintrin.h>
-
-#endif
 
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
@@ -107,10 +98,9 @@ void bl_raster_set_clear_color(bl_raster_t* raster,bl_color_t* color)
     raster->clear_color.a=color->a;
 }
 
+#ifdef BLASTER_RASTER_CLEAR_SS2
 void bl_raster_clear(bl_raster_t* raster)
 {
-
-#ifdef OPT_SSE
     
     uint32_t pixel=bl_color_get_pixel(&raster->clear_color).value;
 
@@ -155,9 +145,14 @@ void bl_raster_clear(bl_raster_t* raster)
         *rdepth=0xFFFF;
         rdepth++;
     }
-    
 
-#else
+    //clear fragment buffer
+    raster->fragment=0;
+}
+
+#ifdef BLASTER_RASTER_CLEAR_GENERIC
+void bl_raster_clear(bl_raster_t* raster)
+{
     bl_pixel_t pixel=bl_color_get_pixel(&raster->clear_color);
 
     uint32_t* color = raster->color_buffer->data;
@@ -170,7 +165,7 @@ void bl_raster_clear(bl_raster_t* raster)
             depth[i+j*raster->screen_width]=0xFFFF;
         }
     }
-#endif
+
     //clear fragment buffer
     raster->fragment=0;
 }
