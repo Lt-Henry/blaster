@@ -181,6 +181,33 @@ void bl_matrix_scale(bl_matrix_t* m,float x,float y,float z)
 
 }
 
+#ifdef BLASTER_MATRIX_MULT_FMA
+void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
+{
+    __m128 A;
+    __m128 B;
+    __m128 R;
+    __m128 Q;
+    
+    for (size_t i=0;i<16;i+=4) {
+        A=_mm_loadu_ps(a->data);
+        B=_mm_load_ps1(b->data+i);
+            
+        R=_mm_mul_ps(A,B);
+        
+        for (size_t j=1;j<4;j++) {
+            size_t k=j<<2;
+            A=_mm_loadu_ps(a->data+k);
+            B=_mm_load_ps1(b->data+i+j);
+            
+            R=_mm_fmadd_ps(A,B,R);
+        }
+        
+        _mm_store_ps(m->data+i,R);
+    }
+}
+#endif
+
 #ifdef BLASTER_MATRIX_MULT_SSE
 void bl_matrix_mult(bl_matrix_t* m,bl_matrix_t* a,bl_matrix_t* b)
 {

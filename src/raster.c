@@ -98,7 +98,7 @@ void bl_raster_set_clear_color(bl_raster_t* raster,bl_color_t* color)
     raster->clear_color.a=color->a;
 }
 
-#ifdef BLASTER_RASTER_CLEAR_SS2
+#ifdef BLASTER_RASTER_CLEAR_SSE2
 void bl_raster_clear(bl_raster_t* raster)
 {
     
@@ -149,6 +149,7 @@ void bl_raster_clear(bl_raster_t* raster)
     //clear fragment buffer
     raster->fragment=0;
 }
+#endif
 
 #ifdef BLASTER_RASTER_CLEAR_GENERIC
 void bl_raster_clear(bl_raster_t* raster)
@@ -169,6 +170,7 @@ void bl_raster_clear(bl_raster_t* raster)
     //clear fragment buffer
     raster->fragment=0;
 }
+#endif
 
 void bl_raster_update(bl_raster_t* raster)
 {

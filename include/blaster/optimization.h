@@ -28,10 +28,11 @@
 #include <xmmintrin.h>
 #include <pmmintrin.h>
 #include <emmintrin.h>
+#include <immintrin.h>
 
 #define BLASTER_RASTER_CLEAR_SSE2
 #define BLASTER_VECTOR_MULT_SSE
-#define BLASTER_MATRIX_MULT_SSE
+#define BLASTER_MATRIX_MULT_FMA
 
 /* generic x64 optimizations */
 #elif defined(OPT_AMD64)
