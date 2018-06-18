@@ -31,7 +31,7 @@
 #include <immintrin.h>
 
 #define BLASTER_RASTER_CLEAR_SSE2
-#define BLASTER_VECTOR_MULT_SSE
+#define BLASTER_VECTOR_MULT_FMA
 #define BLASTER_MATRIX_MULT_FMA
 
 /* generic x64 optimizations */

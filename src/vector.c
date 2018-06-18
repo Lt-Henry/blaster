@@ -115,6 +115,35 @@ void bl_vector_homogeneus(bl_vector_t* v)
     v->w=1.0f;
 }
 
+#ifdef BLASTER_VECTOR_MULT_FMA
+void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
+{
+    
+    __m128 V;
+    __m128 M;
+    __m128 R;
+    __m128 Q;
+    
+    
+    //R=_mm_set_ps(0.0f,0.0f,0.0f,0.0f);
+    V=_mm_load_ps1(v->data);
+    M=_mm_loadu_ps(m->data);
+    R=_mm_mul_ps(V,M);
+        
+    for (size_t i=1;i<4;i++) {
+        
+        size_t j=i<<2;
+        
+        V=_mm_load_ps1(v->data+i);
+        M=_mm_loadu_ps(m->data+j);
+        R=_mm_fmadd_ps(V,M,R);
+    }
+    
+    _mm_store_ps(r->data,R);
+
+}
+#endif
+
 #ifdef BLASTER_VECTOR_MULT_SSE
 void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
 {
