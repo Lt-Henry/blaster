@@ -115,14 +115,14 @@ void bl_raster_clear(bl_raster_t* raster)
     
     for (size_t n=0;n<len/4;n++) {
         
-        _mm_store_si128(color,C);
+        _mm_stream_si128(color,C);
         
         color++;
     }
     
     for (size_t n=0;n<len/8;n++) {
         
-        _mm_store_si128(depth,D);
+        _mm_stream_si128(depth,D);
         
         depth++;
     }
