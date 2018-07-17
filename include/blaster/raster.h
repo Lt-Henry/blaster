@@ -38,6 +38,12 @@ typedef struct bl_fragment_u {
     uint32_t pixel;
 } bl_fragment_t;
 
+typedef struct bl_fragment_chunk_u {
+    size_t size;
+    size_t n;
+    bl_fragment_t* fragments;
+} bl_fragment_chunk_t;
+
 /*!
     Raster main structure
 */
@@ -113,12 +119,19 @@ int bl_raster_get_width(bl_raster_t* raster);
 int bl_raster_get_height(bl_raster_t* raster);
 
 /*!
-    Draws a vertex buffer
+    Draws a vertex buffer as points
 */
 void bl_raster_draw_points(bl_raster_t* raster, bl_vbo_t* vbo);
 
-
+/*!
+    Draws a vertex bufferas lines
+*/
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo);
+
+/*!
+    Draws a vertex buffer as triangles
+*/
+void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo);
 
 #ifdef __cplusplus
 }

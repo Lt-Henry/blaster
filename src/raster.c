@@ -454,3 +454,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         
     }
 }
+
+void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo)
+{
+}
