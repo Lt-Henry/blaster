@@ -29,23 +29,23 @@ extern "C" {
 /*! async queue */
 typedef struct {
 
-    void* data;
+    void* data[];
     int capacity;
     int begin;
     int end;
     int size;
-    size_t bucket_size;
     pthread_mutex_t mutex;
-
+    pthread_cond_t full;
+    pthread_cond_t empty;
 } bl_queue_t;
 
-bl_queue_t* bl_queue_new(int size,size_t bucket_size);
+bl_queue_t* bl_queue_new(int size);
 
 void bl_queue_delete(bl_queue_t* queue);
 
-int bl_queue_push(bl_queue_t* queue,void* value);
+void bl_queue_push(bl_queue_t* queue,void* value);
 
-int bl_queue_pop(bl_queue_t* queue,void* value);
+void* bl_queue_pop(bl_queue_t* queue);
 
 void bl_queue_clear(bl_queue_t* queue);
 

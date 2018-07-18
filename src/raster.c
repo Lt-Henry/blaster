@@ -41,6 +41,25 @@ static void put_fragment(bl_raster_t* raster,uint16_t x,uint16_t y,uint16_t dept
     }
 }
 
+static void bl_raster_alloc_fragments(bl_raster_t* raster)
+{
+    for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
+        raster->fragments[n].size = BL_NUM_FRAGMENTS;
+        raster->fragments[n].n = 0;
+        raster->fragments[n].buffer = malloc(sizeof(bl_fragment_t)*BL_NUM_FRAGMENTS);
+    }
+}
+
+static void bl_raster_free_fragments(bl_raster_t* raster)
+{
+    for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
+        raster->fragments[n].size = 0;
+        raster->fragments[n].n = 0;
+        
+        free(raster->fragments[n].buffer);
+        raster->fragments[n].buffer = 0;
+    }
+}
 
 bl_raster_t* bl_raster_new(int width,int height)
 {
@@ -59,6 +78,8 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     bl_color_set(&raster->clear_color,0.9f,0.9f,0.9f,1.0f);
     
+    bl_raster_alloc_fragments(raster);
+    
     raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
     //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
 
@@ -74,6 +95,8 @@ void bl_raster_delete(bl_raster_t* raster)
     bl_matrix_stack_delete(raster->modelview);
     bl_matrix_stack_delete(raster->projection);
 
+    bl_raster_free_fragments(raster);
+    
     free(raster->fragments);
     free(raster);
 }

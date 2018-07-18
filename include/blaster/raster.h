@@ -31,6 +31,9 @@ extern "C" {
 #include "matrix_stack.h"
 #include "vbo.h"
 
+#define BL_NUM_CHUNK_FRAGMENTS  4
+#define BL_NUM_FRAGMENTS    1024
+
 typedef struct bl_fragment_u {
     uint16_t x;
     uint16_t y;
@@ -41,7 +44,7 @@ typedef struct bl_fragment_u {
 typedef struct bl_fragment_chunk_u {
     size_t size;
     size_t n;
-    bl_fragment_t* fragments;
+    bl_fragment_t* buffer;
 } bl_fragment_chunk_t;
 
 /*!
@@ -75,6 +78,8 @@ typedef struct {
     size_t num_fragments;
     
     size_t fragment;
+    
+    bl_fragment_chunk_t fragments[BL_NUM_CHUNK_FRAGMENTS];
     
 } bl_raster_t;
 

@@ -22,65 +22,80 @@
 #include <string.h>
 
 
-bl_queue_t* bl_queue_new(int size,size_t bucket_size)
+bl_queue_t* bl_queue_new(int size)
 {
     bl_queue_t* queue=NULL;
     
     queue=malloc(sizeof(bl_queue_t));
     
-    queue->data=malloc(size*bucket_size);
+    queue->data=malloc(size*sizeof(void*));
     queue->capacity = size;
     queue->size = 0;
     queue->begin = 1;
     queue->end = 0;
     
     pthread_mutex_init(&queue->mutex,NULL);
+    pthread_cond_init(&queue->full,NULL);
+    pthread_cond_init(&queue->empty,NULL);
     
     return queue;
 }
 
 void bl_queue_delete(bl_queue_t* queue)
 {
+    pthread_cond_destroy(&queue->full);
+    pthread_cond_destroy(&queue->empty);
     pthread_mutex_destroy(queue->mutex);
     free(queue->data);
     free(queue);
 }
 
-int bl_queue_push(bl_queue_t* queue,void* value)
+void bl_queue_push(bl_queue_t* queue,void* value)
 {
-    int ret;
     
-    pthread_mutex_lock(queue->mutex);
+    pthread_mutex_lock(&queue->mutex);
     
-    if (queue->size < queue->capacity) {
-        queue->size++;
-        queue->end=(queue->end+1)%queue->capacity;
-        //queue->data[queue->end]=cmd;
-        ret=0;
+    if (queue->size >= queue->capacity) {
+        pthread_cond_wait(&queue->full,&queue->mutex);
     }
-    else {
-        ret=1;
-    }
+    queue->size++;
+    queue->end=(queue->end+1)%queue->capacity;
+    queue->data[queue->end]=value;
     
-    pthread_mutex_unlock(queue->mutex);
+    pthread_mutex_unlock(&queue->mutex);
     
-    return ret;
+    pthread_cond_signal(&queue->empty);
+    
 }
 
-int bl_queue_pop(bl_queue_t* queue,void* value)
+void* bl_queue_pop(bl_queue_t* queue)
 {
-    pthread_mutex_lock(queue->mutex);
+    void* value;
     
-    pthread_mutex_unlock(queue->mutex);
+    pthread_mutex_lock(&queue->mutex);
+    
+    if (queue->size==0) {
+        pthread_cond_wait(&queue->empty,&queue->mutex);
+    }
+    
+    queue->size--;
+    queue->begin=(queue->begin+1)%queue->capacity;
+    value=queue->data[queue->begin];
+    
+    pthread_mutex_unlock(&queue->mutex);
+    
+    pthread_cond_signal(&queue->full);
+    
+    return value;
 }
 
 void bl_queue_clear(bl_queue_t* queue)
 {
-    pthread_mutex_lock(queue->mutex);
-    
+    pthread_mutex_lock(&queue->mutex);
+    //hum... this is really safe?
     queue->size=0;
     queue->begin=1;
     queue->end=0;
     
-    pthread_mutex_unlock(queue->mutex);
+    pthread_mutex_unlock(&queue->mutex);
 }
