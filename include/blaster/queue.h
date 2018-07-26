@@ -29,7 +29,7 @@ extern "C" {
 /*! async queue */
 typedef struct {
 
-    void* data[];
+    void** data;
     int capacity;
     int begin;
     int end;

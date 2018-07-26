@@ -45,7 +45,7 @@ void bl_queue_delete(bl_queue_t* queue)
 {
     pthread_cond_destroy(&queue->full);
     pthread_cond_destroy(&queue->empty);
-    pthread_mutex_destroy(queue->mutex);
+    pthread_mutex_destroy(&queue->mutex);
     free(queue->data);
     free(queue);
 }

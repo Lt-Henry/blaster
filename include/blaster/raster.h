@@ -79,7 +79,7 @@ typedef struct {
     
     size_t fragment;
     
-    bl_fragment_chunk_t fragments[BL_NUM_CHUNK_FRAGMENTS];
+    bl_fragment_chunk_t fragment_chunk[BL_NUM_CHUNK_FRAGMENTS];
     
 } bl_raster_t;
 
