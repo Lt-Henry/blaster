@@ -185,6 +185,15 @@ void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m)
 }
 #endif
 
+void bl_vector_mult_dual(bl_vector_t* da,const bl_vector_t* sa, bl_vector_t* db,const bl_vector_t* sb, const bl_matrix_t* m)
+{
+    for (int i=0;i<4;i++) {
+        da->data[i]= (m->data[4*0+i] * sa->x) + (m->data[4*1+i] * sa->y) + (m->data[4*2+i] * sa->z) + (m->data[4*3+i] * sa->w);
+        db->data[i]= (m->data[4*0+i] * sb->x) + (m->data[4*1+i] * sb->y) + (m->data[4*2+i] * sb->z) + (m->data[4*3+i] * sb->w);
+    
+    }
+}
+
 void bl_vector_scale(bl_vector_t* v,float s)
 {
     v->x*=s;

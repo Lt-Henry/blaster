@@ -94,6 +94,8 @@ void bl_vector_homogeneus(bl_vector_t* v);
 */
 void bl_vector_mult(bl_vector_t* r,const bl_vector_t* v,const bl_matrix_t* m);
 
+void bl_vector_mult_dual(bl_vector_t* da,const bl_vector_t* sa, bl_vector_t* db,const bl_vector_t* sb, const bl_matrix_t* m);
+
 /*!
     Scale a vector
 */

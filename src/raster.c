@@ -377,8 +377,9 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     uint32_t w2[4];
     
     for (int n=0;n<vbo->size;n+=2) {
-        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
-        bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
+        //bl_vector_mult(&clip[0],&source[n].pos,&matrix);
+        //bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
+        bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
         
         float w=1.0f/clip[0].w;
         
@@ -480,4 +481,105 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo)
 {
+    typedef struct {
+        bl_vector_t pos;
+        bl_color_t color;
+    } vertex_t;
+    
+    typedef struct {
+        uint32_t x;
+        uint32_t y;
+        uint32_t z;
+        uint32_t w;
+    } window_vertex_t;
+    
+    vertex_t* source = (vertex_t*) vbo->data;
+    
+    bl_matrix_t matrix;
+
+    bl_vector_t clip[3];
+    bl_vector_t ndc[3];
+    
+    bl_vector_t wl;
+    
+    wl.x=raster->screen_width/2.0f;
+    wl.y=raster->screen_height/2.0f;
+    wl.z=65535/2.0f;
+    wl.w=0.0f;
+    
+    window_vertex_t wv[3];
+    
+    // precompute modelview and projection matrix
+    bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
+    
+    for (int n=0;n<vbo->size;n+=3) {
+        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
+        bl_vector_mult(&clip[1],&source[n].pos,&matrix);
+        bl_vector_mult(&clip[2],&source[n].pos,&matrix);
+        
+        float w;
+        
+        for (int i=0;i<3;i++) {
+            w=1.0f/clip[i].w;
+            
+            ndc[i].x=clip[i].x*w;
+            ndc[i].y=clip[i].y*w;
+            ndc[i].z=clip[i].z*w;
+            ndc[i].w=clip[i].w*w;
+        }
+        
+        //tessellation
+        //TODO: do it right
+        int out=0;
+        
+        for (int i=0;i<3;i++) {
+            if (ndc[i].z<-1.0f || ndc[i].z>1.0f) {
+                out=1;
+            }
+        }
+        
+        if (out) {
+            continue;
+        }
+        
+        for (int i=0;i<3;i++) {
+            wv[i].x=(ndc[i].x*wl.x)+wl.x;
+            wv[i].y=(ndc[i].y*wl.y)+wl.y;
+            wv[i].z=(ndc[i].z*wl.z)+wl.z;
+        }
+        
+        uint32_t xmin = MIN(wv[0].x,wv[1].x);
+        xmin = MAX(xmin,wv[2].x);
+        
+        if (xmin>=raster->screen_width) {
+            continue;
+        }
+        
+        uint32_t xmax = MAX(wv[0].x,wv[1].x);
+        xmax = MAX(xmax,wv[2].x);
+        
+        if (xmax<0) {
+            continue;
+        }
+        
+        uint32_t ymin = MIN(wv[0].y,wv[1].y);
+        ymin = MAX(ymin,wv[2].y);
+        
+        if (ymin>=raster->screen_height) {
+            continue;
+        }
+        
+        uint32_t ymax = MAX(wv[0].y,wv[1].y);
+        ymax = MAX(ymax,wv[2].y);
+        
+        if (ymax<0) {
+            continue;
+        }
+        
+        xmin = MAX(0,xmin);
+        xmax = MIN(raster->screen_width,xmax);
+        
+        ymin = MAX(0,ymin);
+        ymax = MIN(raster->screen_height,ymax);
+    }
 }
