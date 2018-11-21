@@ -348,6 +348,20 @@ static void swap(uint32_t* a,uint32_t* b)
     *b=tmp;
 }
 
+static float reciprocal(float x)
+{
+    __m128 V;
+    
+    V=_mm_set_ss(x);
+    V=_mm_rcp_ss(V);
+    
+    float ret;
+    
+    _mm_store_ss(&ret,V);
+    
+    return ret;
+}
+
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 {
     typedef struct {
@@ -368,9 +382,9 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     
     bl_vector_t wl;
     
-    wl.x=raster->screen_width/2.0f;
-    wl.y=raster->screen_height/2.0f;
-    wl.z=65535/2.0f;
+    wl.x=raster->screen_width*0.5f;
+    wl.y=raster->screen_height*0.5f;
+    wl.z=65535*0.5f;
     wl.w=0.0f;
     
     uint32_t w1[4];
@@ -381,14 +395,16 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         //bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
         bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
         
-        float w=1.0f/clip[0].w;
+        //float w=1.0f/clip[0].w;
+        float w=reciprocal(clip[0].w);
         
         ndc[0].x=clip[0].x*w;
         ndc[0].y=clip[0].y*w;
         ndc[0].z=clip[0].z*w;
         ndc[0].w=clip[0].w*w;
         
-        w=1.0f/clip[1].w;
+        //w=1.0f/clip[1].w;
+        w=reciprocal(clip[1].w);
         
         ndc[1].x=clip[1].x*w;
         ndc[1].y=clip[1].y*w;
@@ -408,8 +424,10 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         w2[1]=(ndc[1].y*wl.y)+wl.y;
         w2[2]=(ndc[1].z*wl.z)+wl.z;
         
-        float rz1 =1.0f/ndc[0].z;
-        float rz2 =1.0f/ndc[1].z;
+        //float rz1 =1.0f/ndc[0].z;
+        //float rz2 =1.0f/ndc[1].z;
+        float rz1=reciprocal(ndc[0].z);
+        float rz2=reciprocal(ndc[1].z);
         
         int x1 = w1[0];
         int y1 = w1[1];
@@ -450,7 +468,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         const int dx = x2 - x1;
         const int dy = abs(y2 - y1);
         
-        int error = dx / 2;
+        int error = dx >> 1;
         const int ystep = (y1 < y2) ? 1 : -1;
         int y = y1;
         
