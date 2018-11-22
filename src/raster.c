@@ -30,13 +30,10 @@
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
 
-static void put_fragment(bl_raster_t* raster,uint16_t x,uint16_t y,uint16_t depth,bl_pixel_t pixel)
+static void put_fragment(bl_raster_t* raster,bl_fragment_t* fragment)
 {
     if (raster->fragment<raster->num_fragments-1) {
-        raster->fragments[raster->fragment].x=x;
-        raster->fragments[raster->fragment].y=y;
-        raster->fragments[raster->fragment].depth=depth;
-        raster->fragments[raster->fragment].pixel=pixel.value;
+        raster->fragments[raster->fragment]=*fragment;
         raster->fragment++;
     }
 }
@@ -301,9 +298,12 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
             continue;
         }
         
-        bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
-
-        put_fragment(raster,win[0],win[1],win[2],pixel);
+        bl_fragment_t fragment;
+        fragment.pixel=bl_color_get_pixel(&source[n].color).value;
+        fragment.x=win[0];
+        fragment.y=win[1];
+        fragment.depth=win[2];
+        put_fragment(raster,&fragment);
         
         /*
         bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
@@ -390,6 +390,8 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     uint32_t w1[4];
     uint32_t w2[4];
     
+    bl_fragment_t fragment;
+    
     for (int n=0;n<vbo->size;n+=2) {
         //bl_vector_mult(&clip[0],&source[n].pos,&matrix);
         //bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
@@ -470,28 +472,35 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         
         int error = dx >> 1;
         const int ystep = (y1 < y2) ? 1 : -1;
-        int y = y1;
+        fragment.y = y1;
         
         const int maxX = x2;
         
-        bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
-        
-        for (int x=x1; x<maxX; x++) {
-            
-            if (step) {
-                put_fragment(raster,y,x,w1[2],pixel);
+        fragment.pixel=bl_color_get_pixel(&source[n].color).value;
+
+        if (step) {
+            fragment.x = y1;
+            for (fragment.y=x1; fragment.y<maxX; fragment.y++) {
+                
+                put_fragment(raster,&fragment);
+                error -= dy;
+                if (error < 0) {
+                    fragment.x += ystep;
+                    error += dx;
+                }
             }
-            else {
-                put_fragment(raster,x,y,w1[2],pixel);
+        }
+        else {
+            for (fragment.x=x1; fragment.x<maxX; fragment.x++) {
+            
+                put_fragment(raster,&fragment);
+                error -= dy;
+                if (error < 0) {
+                    fragment.y += ystep;
+                    error += dx;
+                }
+            
             }
-            
-            error -= dy;
-            if (error < 0) {
-                y += ystep;
-                error += dx;
-            }
-            
-            
         }
         
     }
