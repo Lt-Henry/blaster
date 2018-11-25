@@ -50,6 +50,26 @@ static int min_i32(int a,int b)
     }
 }
 
+static float rcp(float x)
+{
+#ifdef BLASTER_RASTER_RCP_SSE
+    __m128 V;
+    
+    V=_mm_set_ss(x);
+    V=_mm_rcp_ss(V);
+    
+    float ret;
+    
+    _mm_store_ss(&ret,V);
+    
+    return ret;
+#endif
+
+#ifdef BLASTER_RASTER_RCP_GENERIC
+    return 1.0f/x;
+#endif
+}
+
 static void put_fragment(bl_raster_t* raster,bl_fragment_t* fragment)
 {
     if (raster->fragment<raster->num_fragments-1) {
@@ -368,19 +388,7 @@ static void swap(uint32_t* a,uint32_t* b)
     *b=tmp;
 }
 
-static float reciprocal(float x)
-{
-    __m128 V;
-    
-    V=_mm_set_ss(x);
-    V=_mm_rcp_ss(V);
-    
-    float ret;
-    
-    _mm_store_ss(&ret,V);
-    
-    return ret;
-}
+
 
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 {
@@ -391,7 +399,9 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
 
     point_t* source = (point_t*) vbo->data;
     
-
+    static int max_dx=0;
+    static int max_dy=0;
+    
     bl_matrix_t matrix;
     
     // precompute modelview and projection matrix
@@ -407,8 +417,8 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     wl.z=65535*0.5f;
     wl.w=0.0f;
     
-    uint32_t w1[4];
-    uint32_t w2[4];
+    
+    uint32_t win[2][4];
     
     bl_fragment_t fragment;
     
@@ -418,7 +428,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
         
         //float w=1.0f/clip[0].w;
-        float w=reciprocal(clip[0].w);
+        float w=rcp(clip[0].w);
         
         ndc[0].x=clip[0].x*w;
         ndc[0].y=clip[0].y*w;
@@ -426,7 +436,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         ndc[0].w=clip[0].w*w;
         
         //w=1.0f/clip[1].w;
-        w=reciprocal(clip[1].w);
+        w=rcp(clip[1].w);
         
         ndc[1].x=clip[1].x*w;
         ndc[1].y=clip[1].y*w;
@@ -438,115 +448,92 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
             continue;
         }
         
-        w1[0]=(ndc[0].x*wl.x)+wl.x;
-        w1[1]=(ndc[0].y*wl.y)+wl.y;
-        w1[2]=(ndc[0].z*wl.z)+wl.z;
+        win[0][0]=(ndc[0].x*wl.x)+wl.x;
+        win[0][1]=(ndc[0].y*wl.y)+wl.y;
+        win[0][2]=(ndc[0].z*wl.z)+wl.z;
         
-        w2[0]=(ndc[1].x*wl.x)+wl.x;
-        w2[1]=(ndc[1].y*wl.y)+wl.y;
-        w2[2]=(ndc[1].z*wl.z)+wl.z;
+        win[1][0]=(ndc[1].x*wl.x)+wl.x;
+        win[1][1]=(ndc[1].y*wl.y)+wl.y;
+        win[1][2]=(ndc[1].z*wl.z)+wl.z;
         
         //float rz1 =1.0f/ndc[0].z;
         //float rz2 =1.0f/ndc[1].z;
-        float rz1=reciprocal(ndc[0].z);
-        float rz2=reciprocal(ndc[1].z);
+        //float rz1=rcp(ndc[0].z);
+        //float rz2=rcp(ndc[1].z);
         
-        int x1 = w1[0];
-        int y1 = w1[1];
+        int x0 = win[0][0];
+        int y0 = win[0][1];
         
-        int x2 = w2[0];
-        int y2 = w2[1];
+        int x1 = win[1][0];
+        int y1 = win[1][1];
         
         int xlimit=raster->screen_width-1;
         int ylimit=raster->screen_height-1;
         
-        const int dx = x2-x1;
-        const int dy = y2-y1;
-
+        const int dx = x1-x0;
+        const int dy = y1-y0;
+        
+        
+        const int incx = (dx<0) ? -1 : 1;
+        const int incy = (dy<0) ? -1 : 1;
+        
         const int step = abs(dy)-abs(dx);
         
-        int xs = min_i32(x1,x2);
-        int ys = min_i32(y1,y2);
+        int error;
+        int ey;
+        int ex;
         
-        if (xs>xlimit || ys>ylimit) {
-            continue;
-        }
-        
-        int xe = xs + dx;
-        int ye = ys + dy;
-        
-        if (xe<0 || ye<0) {
-            continue;
-        }
+        ey = abs(dy);
+        ex = abs(dx);
+        fragment.pixel=bl_color_get_pixel(&source[n].color).value;
         
         // horitzontal ladder
         if (step<0) {
             
-        }
-        
-        
-        //+++++
-        const int step = abs(y2-y1) > abs(x2-x1);
-        
-        if (step) {
-            swap(&x1,&y1);
-            swap(&x2,&y2);
-            swap(&xlimit,&ylimit);
-        }
-        
-        if (x1>x2) {
-            swap(&x1,&x2);
-            swap(&y1,&y2);
-        }
-        
-        if (x1>xlimit || y1>ylimit) {
-            continue;
-        }
-        
-        if (x2<0 || y2<0) {
-            continue;
-        }
-        
-        x1=MAX(x1,0);
-        x2=MIN(x2,xlimit);
-        y1=MAX(y1,0);
-        y2=MIN(y2,ylimit);
-        
-        const int dx = x2 - x1;
-        const int dy = abs(y2 - y1);
-        
-        int error = dx >> 1;
-        const int ystep = (y1 < y2) ? 1 : -1;
-        fragment.y = y1;
-        
-        const int maxX = x2;
-        
-        fragment.pixel=bl_color_get_pixel(&source[n].color).value;
-
-        if (step) {
-            fragment.x = y1;
-            for (fragment.y=x1; fragment.y<maxX; fragment.y++) {
+            
+            error = 2*ey - ex;
+            
+            fragment.y=y0;
+            
+            for (fragment.x=x0;fragment.x!=x1;fragment.x+=incx) {
+                if (fragment.x>0 && fragment.x<xlimit &&
+                    fragment.y>0 && fragment.y<ylimit) {
+                    
+                    put_fragment(raster,&fragment);
                 
-                put_fragment(raster,&fragment);
-                error -= dy;
-                if (error < 0) {
-                    fragment.x += ystep;
-                    error += dx;
                 }
+                
+                
+                if (error > 0) {
+                    fragment.y += incy;
+                    error -= 2*ex;
+                }
+                error += 2*ey;
             }
         }
         else {
-            for (fragment.x=x1; fragment.x<maxX; fragment.x++) {
+            // vertical ladder
             
-                put_fragment(raster,&fragment);
-                error -= dy;
-                if (error < 0) {
-                    fragment.y += ystep;
-                    error += dx;
+            error = 2*ex - ey;
+            
+            fragment.x=x0;
+            
+            for (fragment.y=y0;fragment.y!=y1;fragment.y+=incy) {
+                if (fragment.x>0 && fragment.x<xlimit &&
+                    fragment.y>0 && fragment.y<ylimit) {
+                    
+                    put_fragment(raster,&fragment);
+                
                 }
-            
+                
+                if (error>0) {
+                    fragment.x += incx;
+                    error -= 2*ey;
+                }
+                error += 2*ex;
             }
         }
+        
         
     }
 }

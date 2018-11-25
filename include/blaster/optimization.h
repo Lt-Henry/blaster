@@ -30,6 +30,7 @@
 #include <emmintrin.h>
 #include <immintrin.h>
 
+#define BLASTER_RASTER_RCP_SSE
 #define BLASTER_RASTER_CLEAR_SSE2
 #define BLASTER_VECTOR_MULT_FMA
 #define BLASTER_MATRIX_MULT_FMA
@@ -43,6 +44,7 @@
 #include <pmmintrin.h>
 #include <emmintrin.h>
 
+#define BLASTER_RASTER_RCP_SSE
 #define BLASTER_RASTER_CLEAR_SSE2
 #define BLASTER_VECTOR_MULT_SSE
 #define BLASTER_MATRIX_MULT_SSE
@@ -50,6 +52,7 @@
 /* naive implementation */
 #else
 
+#define BLASTER_RASTER_RCP_GENERIC
 #define BLASTER_RASTER_CLEAR_GENERIC
 #define BLASTER_VECTOR_MULT_GENERIC
 #define BLASTER_MATRIX_MULT_GENERIC

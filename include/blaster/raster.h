@@ -35,8 +35,8 @@ extern "C" {
 #define BL_NUM_FRAGMENTS    1024
 
 typedef struct bl_fragment_u {
-    uint16_t x;
-    uint16_t y;
+    int16_t x;
+    int16_t y;
     uint16_t depth;
     uint32_t pixel;
 } bl_fragment_t;
