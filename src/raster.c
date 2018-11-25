@@ -30,6 +30,26 @@
 #define MAX(a,b) ((a) > (b) ? a : b)
 #define MIN(a,b) ((a) < (b) ? a : b)
 
+static int max_i32(int a,int b)
+{
+    if (a>b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
+static int min_i32(int a,int b)
+{
+    if (a<b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
 static void put_fragment(bl_raster_t* raster,bl_fragment_t* fragment)
 {
     if (raster->fragment<raster->num_fragments-1) {
@@ -440,7 +460,32 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
         int xlimit=raster->screen_width-1;
         int ylimit=raster->screen_height-1;
         
+        const int dx = x2-x1;
+        const int dy = y2-y1;
+
+        const int step = abs(dy)-abs(dx);
         
+        int xs = min_i32(x1,x2);
+        int ys = min_i32(y1,y2);
+        
+        if (xs>xlimit || ys>ylimit) {
+            continue;
+        }
+        
+        int xe = xs + dx;
+        int ye = ys + dy;
+        
+        if (xe<0 || ye<0) {
+            continue;
+        }
+        
+        // horitzontal ladder
+        if (step<0) {
+            
+        }
+        
+        
+        //+++++
         const int step = abs(y2-y1) > abs(x2-x1);
         
         if (step) {
