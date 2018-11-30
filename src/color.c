@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
+#include <blaster/optimization.h>
 #include <blaster/color.h>
 
 #ifdef OPT_SSE
@@ -84,27 +84,30 @@ void bl_color_clamp(bl_color_t* c)
 bl_pixel_t bl_color_get_pixel(const bl_color_t* c)
 {
 
-#ifdef DEPRECATED
+#ifdef BLASTER_COLOR_GET_PIXEL_SSE
 
-    uint32_t pixel;
-    //uint32_t ci[4];
+    bl_pixel_t pixel;
+    uint32_t ci[4];
     
     __m128i CI;
     __m128 C;
     __m128 K;
     
-    C = _mm_loadu_ps(c);
+    C = _mm_loadu_ps(c->channel);
     K = _mm_set_ps1(255.0f);
     C = _mm_mul_ps(C,K);
     
     CI = _mm_cvtps_epi32(C);
-    //_mm_storeu_si128(ci,CI);
-    uint32_t* ci = (uint32_t*)&CI;
-    pixel=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
+    //CI = _mm_shuffle_epi32(CI,);
+    //_mm_storeu_si32(&pixel.value,CI);
+    _mm_storeu_si128((__m128i*)ci,CI);
+    //uint32_t* ci = (uint32_t*)&CI;
+    pixel.value=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
 
     return pixel;
+#endif
 
-#else
+#ifdef BLASTER_COLOR_GET_PIXEL_GENERIC
 
     bl_pixel_t pixel;
     

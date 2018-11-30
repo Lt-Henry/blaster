@@ -423,9 +423,9 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     bl_fragment_t fragment;
     
     for (int n=0;n<vbo->size;n+=2) {
-        //bl_vector_mult(&clip[0],&source[n].pos,&matrix);
-        //bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
-        bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
+        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
+        bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
+        //bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
         
         //float w=1.0f/clip[0].w;
         float w=rcp(clip[0].w);
