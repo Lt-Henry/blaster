@@ -30,6 +30,9 @@ extern "C" {
 #include "matrix.h"
 #include "matrix_stack.h"
 #include "vbo.h"
+#include "queue.h"
+
+#include <pthread.h>
 
 #define BL_NUM_CHUNK_FRAGMENTS  4
 #define BL_NUM_FRAGMENTS    1024
@@ -80,6 +83,11 @@ typedef struct {
     size_t fragment;
     
     bl_fragment_chunk_t fragment_chunk[BL_NUM_CHUNK_FRAGMENTS];
+    
+    bl_queue_t* fragment_queue_in;
+    bl_queue_t* fragment_queue_out;
+    
+    pthread_t update_workers[4];
     
 } bl_raster_t;
 

@@ -17,8 +17,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef BLASTER_MATRIX
-#define BLASTER_MATRIX
+#ifndef BLASTER_QUEUE
+#define BLASTER_QUEUE
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,5 +48,9 @@ void bl_queue_push(bl_queue_t* queue,void* value);
 void* bl_queue_pop(bl_queue_t* queue);
 
 void bl_queue_clear(bl_queue_t* queue);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

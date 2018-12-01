@@ -98,6 +98,26 @@ static void bl_raster_free_fragments(bl_raster_t* raster)
     }
 }
 
+void update_worker(void* arg)
+{
+    bl_raster_t* raster = (bl_raster_t*)arg;
+
+    printf("update worker started!\n");
+    
+    while (1) {
+        bl_fragment_chunk_t* chunk=bl_queue_pop(raster->fragment_queue_out);
+        if (chunk==NULL) {
+            break;
+        }
+        
+        printf("update\n");
+        usleep(100000);
+        
+        bl_queue_push(raster->fragment_queue_out,chunk);
+    }
+
+}
+
 bl_raster_t* bl_raster_new(int width,int height)
 {
     bl_raster_t* raster;
@@ -119,12 +139,26 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
     //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
+    raster->fragment_queue_in=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
+    raster->fragment_queue_out=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
+    
+    for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
+        printf("pushing chunk %d\n",n);
+        bl_queue_push(raster->fragment_queue_in,&raster->fragment_chunk[n]);
+    }
+    
+    pthread_create(&raster->update_workers[0],NULL,update_worker,raster);
 
     return raster;
 }
 
 void bl_raster_delete(bl_raster_t* raster)
 {
+
+    pthread_cancel(raster->update_workers[0]);
+
+    bl_queue_delete(raster->fragment_queue_in);
+    bl_queue_delete(raster->fragment_queue_out);
 
     bl_texture_delete(raster->color_buffer);
     bl_texture_delete(raster->depth_buffer);
