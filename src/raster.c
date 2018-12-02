@@ -72,9 +72,12 @@ static float rcp(float x)
 
 static void put_fragment(bl_raster_t* raster,bl_fragment_t* fragment)
 {
-    if (raster->fragment<raster->num_fragments-1) {
-        raster->fragments[raster->fragment]=*fragment;
-        raster->fragment++;
+    raster->current_chunk->buffer[raster->current_chunk->count]=*fragment;
+    raster->current_chunk->count++;
+    if (raster->current_chunk->count==raster->current_chunk->size) {
+        //printf("pushing a new chunk to render\n");
+        bl_queue_push(raster->fragment_queue_out,raster->current_chunk);
+        raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
     }
 }
 
@@ -82,7 +85,7 @@ static void bl_raster_alloc_fragments(bl_raster_t* raster)
 {
     for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
         raster->fragment_chunk[n].size = BL_NUM_FRAGMENTS;
-        raster->fragment_chunk[n].n = 0;
+        raster->fragment_chunk[n].count = 0;
         raster->fragment_chunk[n].buffer = malloc(sizeof(bl_fragment_t)*BL_NUM_FRAGMENTS);
     }
 }
@@ -91,7 +94,7 @@ static void bl_raster_free_fragments(bl_raster_t* raster)
 {
     for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
         raster->fragment_chunk[n].size = 0;
-        raster->fragment_chunk[n].n = 0;
+        raster->fragment_chunk[n].count = 0;
         
         free(raster->fragment_chunk[n].buffer);
         raster->fragment_chunk[n].buffer = 0;
@@ -105,17 +108,36 @@ void update_worker(void* arg)
     printf("update worker started!\n");
     
     while (1) {
-        bl_fragment_chunk_t* chunk=bl_queue_pop(raster->fragment_queue_out);
+        bl_fragment_chunk_t* chunk;
+        
+        chunk=bl_queue_pop(raster->fragment_queue_out);
+        
         if (chunk==NULL) {
             break;
         }
         
-        printf("update\n");
-        usleep(100000);
+        for (size_t n=0;n<chunk->count;n++) {
+            
+            size_t offset=chunk->buffer[n].x+chunk->buffer[n].y*raster->screen_width;
         
-        bl_queue_push(raster->fragment_queue_out,chunk);
-    }
+            uint16_t* zbuffer=raster->depth_buffer->data;
+            zbuffer+=offset;
+        
+            uint32_t* cbuffer=raster->color_buffer->data;
+            cbuffer+=offset;
 
+            if (chunk->buffer[n].depth<*zbuffer) {
+                
+                *zbuffer=chunk->buffer[n].depth;
+                *cbuffer=chunk->buffer[n].pixel;
+            }
+        }
+        
+        chunk->count=0;
+        bl_queue_push(raster->fragment_queue_in,chunk);
+        //printf("render done\n");
+    }
+    printf("update worker is done\n");
 }
 
 bl_raster_t* bl_raster_new(int width,int height)
@@ -137,18 +159,20 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     bl_raster_alloc_fragments(raster);
     
-    raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
+    //raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
     //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
     raster->fragment_queue_in=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
     raster->fragment_queue_out=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
     
     for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
-        printf("pushing chunk %d\n",n);
+        //printf("pushing chunk %d\n",n);
         bl_queue_push(raster->fragment_queue_in,&raster->fragment_chunk[n]);
     }
     
     pthread_create(&raster->update_workers[0],NULL,update_worker,raster);
 
+    raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
+    
     return raster;
 }
 
@@ -168,7 +192,7 @@ void bl_raster_delete(bl_raster_t* raster)
 
     bl_raster_free_fragments(raster);
     
-    free(raster->fragments);
+    //free(raster->fragments);
     free(raster);
 }
 
@@ -268,7 +292,16 @@ void bl_raster_clear(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
+
+    //printf("sync...");
+    bl_queue_push(raster->fragment_queue_out,raster->current_chunk);
+    raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
     
+    while (!bl_queue_is_empty(raster->fragment_queue_out)) {
+        //printf("%d\n",raster->fragment_queue_out->size);
+    }
+    
+    /*
     for (size_t n=0;n<raster->fragment;n++) {
         size_t offset=raster->fragments[n].x+raster->fragments[n].y*raster->screen_width;
         
@@ -284,7 +317,7 @@ void bl_raster_update(bl_raster_t* raster)
             *cbuffer=raster->fragments[n].pixel;
         }
     }
-    
+    */
 }
 
 int bl_raster_get_width(bl_raster_t* raster)

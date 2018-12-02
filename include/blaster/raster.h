@@ -35,7 +35,7 @@ extern "C" {
 #include <pthread.h>
 
 #define BL_NUM_CHUNK_FRAGMENTS  4
-#define BL_NUM_FRAGMENTS    1024
+#define BL_NUM_FRAGMENTS    32767
 
 typedef struct bl_fragment_u {
     int16_t x;
@@ -46,7 +46,7 @@ typedef struct bl_fragment_u {
 
 typedef struct bl_fragment_chunk_u {
     size_t size;
-    size_t n;
+    size_t count;
     bl_fragment_t* buffer;
 } bl_fragment_chunk_t;
 
@@ -83,6 +83,7 @@ typedef struct {
     size_t fragment;
     
     bl_fragment_chunk_t fragment_chunk[BL_NUM_CHUNK_FRAGMENTS];
+    bl_fragment_chunk_t* current_chunk;
     
     bl_queue_t* fragment_queue_in;
     bl_queue_t* fragment_queue_out;

@@ -20,7 +20,7 @@
 #include <blaster/queue.h>
 
 #include <string.h>
-
+#include <stdio.h>
 
 bl_queue_t* bl_queue_new(int size)
 {
@@ -79,8 +79,9 @@ void* bl_queue_pop(bl_queue_t* queue)
     }
     
     queue->size--;
-    queue->begin=(queue->begin+1)%queue->capacity;
+    
     value=queue->data[queue->begin];
+    queue->begin=(queue->begin+1)%queue->capacity;
     
     pthread_mutex_unlock(&queue->mutex);
     
@@ -98,4 +99,16 @@ void bl_queue_clear(bl_queue_t* queue)
     queue->end=0;
     
     pthread_mutex_unlock(&queue->mutex);
+}
+
+int bl_queue_is_empty(bl_queue_t* queue)
+{
+    int ret;
+    
+    pthread_mutex_lock(&queue->mutex);
+
+    ret=(queue->size==0);
+    pthread_mutex_unlock(&queue->mutex);
+    
+    return ret;
 }
