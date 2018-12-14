@@ -36,6 +36,7 @@ extern "C" {
 
 #define BL_NUM_CHUNK_FRAGMENTS  4
 #define BL_NUM_FRAGMENTS    32767
+#define BL_MAX_COMMANDS 16
 
 typedef struct bl_fragment_u {
     int16_t x;
@@ -49,6 +50,33 @@ typedef struct bl_fragment_chunk_u {
     size_t count;
     bl_fragment_t* buffer;
 } bl_fragment_chunk_t;
+
+typedef struct bl_command_u {
+
+    /*! command type */
+    uint8_t type;
+    
+    /*! status */
+    uint8_t status;
+    
+    union {
+        struct {
+            uint32_t color;
+        } clear;
+        
+        struct {
+            vbo_t* vbo;
+            uint8_t type;
+            size_t index;
+            bl_fragment_chunk_t* chunk;
+        } draw;
+        
+        struct {
+            bl_fragment_chunk_t* chunk;
+        } update;
+    };
+    
+} bl_command_t;
 
 /*!
     Raster main structure
@@ -85,10 +113,12 @@ typedef struct {
     bl_fragment_chunk_t fragment_chunk[BL_NUM_CHUNK_FRAGMENTS];
     bl_fragment_chunk_t* current_chunk;
     
-    bl_queue_t* fragment_queue_in;
-    bl_queue_t* fragment_queue_out;
+    bl_command_t commands[BL_MAX_COMMANDS];
+    bl_queue_t* cmd_queue_in;
+    bl_queue_t* cmd_queue_out;
+    bl_queue_t* cmd_queue_empty;
     
-    pthread_t update_workers[4];
+    pthread_t threads[4];
     
 } bl_raster_t;
 
@@ -131,6 +161,11 @@ int bl_raster_get_width(bl_raster_t* raster);
     Get height in pixels
 */
 int bl_raster_get_height(bl_raster_t* raster);
+
+/*!
+    Draws a vertex buffer (user-side function)
+*/
+void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type);
 
 /*!
     Draws a vertex buffer as points

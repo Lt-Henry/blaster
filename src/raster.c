@@ -101,42 +101,81 @@ static void bl_raster_free_fragments(bl_raster_t* raster)
     }
 }
 
-void update_worker(void* arg)
+/*!
+    Dispatcher thread
+*/
+void master(void* arg)
+{
+    bl_raster_t* raster = (bl_raster_t*)arg;
+
+    printf("update worker started!\n");
+
+}
+
+/*!
+    Worker thread
+*/
+void slave(void* arg)
 {
     bl_raster_t* raster = (bl_raster_t*)arg;
 
     printf("update worker started!\n");
     
+    
+    bl_fragment_chunk_t* chunk;
+    
+    
     while (1) {
-        bl_fragment_chunk_t* chunk;
+        bl_command_t* cmd;
         
-        chunk=bl_queue_pop(raster->fragment_queue_out);
+        cmd=bl_queue_pop(raster->cmd_queue_out);
         
-        if (chunk==NULL) {
+        
+        if (cmd==NULL) {
             break;
         }
         
-        for (size_t n=0;n<chunk->count;n++) {
+        switch (cmd->type) {
+        
+            case BL_CMD_CLEAR:
+                bl_raster_clear(raster);
+                bl_queue_push(raster->cmd_queue_in,cmd);
+            break;
             
-            size_t offset=chunk->buffer[n].x+chunk->buffer[n].y*raster->screen_width;
-        
-            uint16_t* zbuffer=raster->depth_buffer->data;
-            zbuffer+=offset;
-        
-            uint32_t* cbuffer=raster->color_buffer->data;
-            cbuffer+=offset;
-
-            if (chunk->buffer[n].depth<*zbuffer) {
+            case BL_CMD_DRAW:
+            
+            break;
+            
+            case BL_CMD_UPDATE:
+            
+                chunk=cmd->chunk;
                 
-                *zbuffer=chunk->buffer[n].depth;
-                *cbuffer=chunk->buffer[n].pixel;
-            }
+                //TODO: move to function
+                for (size_t n=0;n<chunk->count;n++) {
+            
+                    size_t offset=chunk->buffer[n].x+chunk->buffer[n].y*raster->screen_width;
+                
+                    uint16_t* zbuffer=raster->depth_buffer->data;
+                    zbuffer+=offset;
+                
+                    uint32_t* cbuffer=raster->color_buffer->data;
+                    cbuffer+=offset;
+
+                    if (chunk->buffer[n].depth<*zbuffer) {
+                        
+                        *zbuffer=chunk->buffer[n].depth;
+                        *cbuffer=chunk->buffer[n].pixel;
+                    }
+                }
+                
+                bl_queue_push(raster->cmd_queue_in,cmd);
+            break;
+            
+            default:
+                
         }
-        
-        chunk->count=0;
-        bl_queue_push(raster->fragment_queue_in,chunk);
-        //printf("render done\n");
     }
+    
     printf("update worker is done\n");
 }
 
@@ -159,19 +198,22 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     bl_raster_alloc_fragments(raster);
     
-    //raster->fragments=malloc(sizeof(bl_fragment_t)*5000000);
-    //raster->fragments=aligned_alloc(64,sizeof(bl_fragment_t)*5000000);
-    raster->fragment_queue_in=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
-    raster->fragment_queue_out=bl_queue_new(BL_NUM_CHUNK_FRAGMENTS);
+    // create command queues
+    raster->cmd_queue_in=bl_queue_new(BL_MAX_COMMANDS);
+    raster->cmd_queue_out=bl_queue_new(BL_MAX_COMMANDS);
+    raster->cmd_queue_empty=bl_queue_new(BL_MAX_COMMANDS);
     
-    for (int n=0;n<BL_NUM_CHUNK_FRAGMENTS;n++) {
-        //printf("pushing chunk %d\n",n);
-        bl_queue_push(raster->fragment_queue_in,&raster->fragment_chunk[n]);
+    // fill input queue with empty commands
+    for (int n=0;n<BL_MAX_COMMANDS;n++) {
+        commands[n].type=BL_CMD_NONE;
+        bl_queue_push(raster->cmd_queue_empty,&commands[n]);
     }
     
-    pthread_create(&raster->update_workers[0],NULL,update_worker,raster);
+    pthread_create(&raster->threads[0],NULL,master,raster);
+    pthread_create(&raster->threads[1],NULL,slave,raster);
+    pthread_create(&raster->threads[2],NULL,slave,raster);
 
-    raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
+    //raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
     
     return raster;
 }
@@ -328,6 +370,17 @@ int bl_raster_get_width(bl_raster_t* raster)
 int bl_raster_get_height(bl_raster_t* raster)
 {
     return raster->screen_height;
+}
+
+void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
+{
+    bl_command_t* cmd;
+    
+    cmd = bl_queue_pop(raster->cmd_queue_empty);
+    
+    cmd->type = BL_CMD_DRAW;
+    
+    bl_queue_push(raster->cmd_queue_out);
 }
 
 void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
