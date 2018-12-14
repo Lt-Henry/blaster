@@ -87,25 +87,22 @@ bl_pixel_t bl_color_get_pixel(const bl_color_t* c)
     __m128 C;
     __m128 K;
     
-    C = _mm_loadu_ps(c->channel);
-    K = _mm_set_ps1(255.0f);
-    C = _mm_mul_ps(C,K);
+    C = _mm_loadu_ps(c->channel); // 1c
+    K = _mm_set_ps1(255.0f); // 1c
+    C = _mm_mul_ps(C,K); // 3c
     
-    CI = _mm_cvtps_epi32(C);
-    //CI = _mm_shuffle_epi32(CI,);
-    //_mm_storeu_si32(&pixel.value,CI);
-    //_mm_storeu_si128((__m128i*)ci,CI);
-    //uint32_t* ci = (uint32_t*)&CI;
-    //pixel.value=(ci[3]<<24) | (ci[2]<<16) | (ci[1]<<8) | ci[0];
-    __m128i C1 = _mm_bslli_si128(CI,3);
-    __m128i C2 = _mm_bslli_si128(CI,5);
-    __m128i C3 = _mm_bslli_si128(CI,8);
-    CI = _mm_or_si128(CI,C1);
-    CI = _mm_or_si128(CI,C2);
-    CI = _mm_or_si128(CI,C3);
-    //_mm_storeu_si32(&pixel.value,CI);
-    _mm_storeu_si128((__m128i*)ci,CI);
-    pixel.value=ci[0];
+    CI = _mm_cvtps_epi32(C); // 3c
+
+    __m128i C1 = _mm_bsrli_si128(CI,3); // 1c
+    __m128i C2 = _mm_bsrli_si128(CI,6); // 1c
+    __m128i C3 = _mm_bsrli_si128(CI,9); // 1c
+
+    CI = _mm_or_si128(CI,C1); // 1c
+    CI = _mm_or_si128(CI,C2); // 1c
+    CI = _mm_or_si128(CI,C3); // 1c
+
+    _mm_storeu_si128((__m128i*)ci,CI); // 1c
+    pixel.value=ci[0]; // 1c
     
     return pixel;
 #endif
