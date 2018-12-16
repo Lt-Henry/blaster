@@ -34,9 +34,9 @@ extern "C" {
 
 #include <pthread.h>
 
-#define BL_NUM_CHUNK_FRAGMENTS  4
-#define BL_NUM_FRAGMENTS    32767
-#define BL_MAX_COMMANDS 16
+#define BL_MAX_CHUNKS       4
+#define BL_MAX_FRAGMENTS    32767
+#define BL_MAX_COMMANDS     16
 
 typedef struct bl_fragment_u {
     int16_t x;
@@ -104,21 +104,18 @@ typedef struct {
     /*! color used for clear */
     bl_color_t clear_color;
     
-    bl_fragment_t* fragments;
     
-    size_t num_fragments;
-    
-    size_t fragment;
-    
-    bl_fragment_chunk_t fragment_chunk[BL_NUM_CHUNK_FRAGMENTS];
-    bl_fragment_chunk_t* current_chunk;
+    bl_fragment_chunk_t chunks[BL_MAX_CHUNKS];
+    bl_queue_t* queue_free_chunks;
     
     bl_command_t commands[BL_MAX_COMMANDS];
-    bl_queue_t* cmd_queue_in;
-    bl_queue_t* cmd_queue_out;
-    bl_queue_t* cmd_queue_empty;
+    bl_queue_t* queue_free_commands;
     
-    pthread_t threads[4];
+    bl_queue_t* queue_update_commands;
+    bl_queue_t* queue_draw_commands;
+    
+    pthread_t thread_draw[2];
+    pthread_t thread_update;
     
 } bl_raster_t;
 
@@ -167,20 +164,6 @@ int bl_raster_get_height(bl_raster_t* raster);
 */
 void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type);
 
-/*!
-    Draws a vertex buffer as points
-*/
-void bl_raster_draw_points(bl_raster_t* raster, bl_vbo_t* vbo);
-
-/*!
-    Draws a vertex bufferas lines
-*/
-void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo);
-
-/*!
-    Draws a vertex buffer as triangles
-*/
-void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo);
 
 #ifdef __cplusplus
 }
