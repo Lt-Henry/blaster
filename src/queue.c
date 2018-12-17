@@ -112,3 +112,15 @@ int bl_queue_is_empty(bl_queue_t* queue)
     
     return ret;
 }
+
+int bl_queue_is_full(bl_queue_t* queue)
+{
+    int ret;
+    
+    pthread_mutex_lock(&queue->mutex);
+
+    ret=(queue->size==queue->capacity);
+    pthread_mutex_unlock(&queue->mutex);
+    
+    return ret;
+}

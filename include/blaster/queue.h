@@ -51,6 +51,8 @@ void bl_queue_clear(bl_queue_t* queue);
 
 int bl_queue_is_empty(bl_queue_t* queue);
 
+int bl_queue_is_full(bl_queue_t* queue);
+
 #ifdef __cplusplus
 }
 #endif

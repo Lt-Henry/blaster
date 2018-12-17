@@ -67,8 +67,9 @@ typedef struct bl_command_u {
         struct {
             vbo_t* vbo;
             uint8_t type;
-            size_t index;
-            bl_fragment_chunk_t* chunk;
+            size_t start;
+            size_t count;
+            
         } draw;
         
         struct {

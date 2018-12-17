@@ -42,19 +42,23 @@ void bl_raster_clear_buffers(bl_raster_t* raster);
 /*!
     Draws a vertex buffer as points
 */
-void bl_raster_draw_points(bl_raster_t* raster, bl_vbo_t* vbo, size_t start);
+void bl_raster_draw_points(bl_raster_t* raster, bl_vbo_t* vbo, size_t start,size_t count);
 
 /*!
     Draws a vertex bufferas lines
 */
-void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo, size_t start);
+void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo, size_t start,size_t count);
 
 /*!
     Draws a vertex buffer as triangles
 */
-void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo, size_t start);
+void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo, size_t start,size_t count);
 
+/*!
+    Push fragments to frame buffer
+*/
 void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk);
+
 
 static int max_i32(int a,int b)
 {
@@ -96,34 +100,38 @@ static float rcp(float x)
 #endif
 }
 
-static void put_fragment(bl_raster_t* raster,bl_fragment_t* fragment)
+static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chunk,bl_fragment_t* fragment)
 {
-    raster->current_chunk->buffer[raster->current_chunk->count]=*fragment;
-    raster->current_chunk->count++;
-    if (raster->current_chunk->count==raster->current_chunk->size) {
-        //printf("pushing a new chunk to render\n");
-        bl_queue_push(raster->fragment_queue_out,raster->current_chunk);
-        raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
+    *chunk->buffer[*chunk->count]=*fragment;
+    *chunk->count++;
+    if (*chunk->count==*chunk->size) {
+
+        bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
+        cmd->type = BL_CMD_UPDATE;
+        cmd->update.chunk=*chunk;
+        
+        bl_queue_push(raster->queue_update_commands,cmd);
+        *chunk = bl_queue_pop(raster->queue_free_chunks);
     }
 }
 
 static void bl_raster_alloc_chunks(bl_raster_t* raster)
 {
     for (int n=0;n<BL_MAX_CHUNKS;n++) {
-        raster->fragment_chunk[n].size = BL_MAX_FRAGMENTS;
-        raster->fragment_chunk[n].count = 0;
-        raster->fragment_chunk[n].buffer = malloc(sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
+        raster->chunks[n].size = BL_MAX_FRAGMENTS;
+        raster->chunks[n].count = 0;
+        raster->chunks[n].buffer = malloc(sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
     }
 }
 
 static void bl_raster_free_chunks(bl_raster_t* raster)
 {
     for (int n=0;n<BL_MAX_CHUNKS;n++) {
-        raster->fragment_chunk[n].size = 0;
-        raster->fragment_chunk[n].count = 0;
+        raster->chunks[n].size = 0;
+        raster->chunks[n].count = 0;
         
-        free(raster->fragment_chunk[n].buffer);
-        raster->fragment_chunk[n].buffer = 0;
+        free(raster->chunks[n].buffer);
+        raster->chunks[n].buffer = 0;
     }
 }
 
@@ -168,11 +176,26 @@ void draw_worker(void* arg)
         switch (cmd->type) {
         
             case BL_CMD_DRAW:
-            
+                switch (cmd->draw.type) {
+                    
+                    case BL_VBO_POINTS:
+                        bl_raster_draw_points(raster,vbo,cmd->draw.start,cmd->draw.count);
+                    break;
+                    
+                    case BL_VBO_LINES:
+                        bl_raster_draw_lines(raster,vbo,cmd->draw.start,cmd->draw.count);
+                    break;
+                    
+                    case BL_VBO_TRIANGLES:
+                        bl_raster_draw_triangles(raster,vbo,cmd->draw.start,cmd->draw.count);
+                    break;
+                }
             break;
             
             default:
         }
+        
+        bl_queue_push(raster->queue_free_commands,cmd);
     }
     
     printf("Draw worker is done\n");
@@ -393,16 +416,9 @@ void bl_raster_clear_buffers(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
-
-    //printf("sync...");
-    bl_queue_push(raster->fragment_queue_out,raster->current_chunk);
-    raster->current_chunk = bl_queue_pop(raster->fragment_queue_in);
     
-    while (!bl_queue_is_empty(raster->fragment_queue_out)) {
-        //printf("%d\n",raster->fragment_queue_out->size);
+    while (!bl_queue_is_full(raster->queue_free_commands)) {
     }
-    
-
 }
 
 int bl_raster_get_width(bl_raster_t* raster)
@@ -426,10 +442,13 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     bl_queue_push(raster->cmd_queue_out);
 }
 
-void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo)
+void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t count)
 {
 
-    // point rendering
+    bl_fragment_chunk_t* chunk;
+    
+    //get a free chunk
+    chunk = bl_queue_pop(raster->queue_free_chunks);
 
     bl_vector_t clip;
     bl_vector_t ndc;
@@ -553,7 +572,7 @@ static void swap(uint32_t* a,uint32_t* b)
 
 
 
-void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
+void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
     typedef struct {
         bl_vector_t pos;
@@ -701,7 +720,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo)
     }
 }
 
-void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo)
+void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
     typedef struct {
         bl_vector_t pos;
