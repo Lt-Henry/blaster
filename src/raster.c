@@ -102,9 +102,9 @@ static float rcp(float x)
 
 static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chunk,bl_fragment_t* fragment)
 {
-    *chunk->buffer[*chunk->count]=*fragment;
-    *chunk->count++;
-    if (*chunk->count==*chunk->size) {
+    (*chunk)->buffer[(*chunk)->count]=*fragment;
+    (*chunk)->count++;
+    if ((*chunk)->count==(*chunk)->size) {
 
         bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
         cmd->type = BL_CMD_UPDATE;
@@ -135,7 +135,7 @@ static void bl_raster_free_chunks(bl_raster_t* raster)
     }
 }
 
-void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk);
+void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk)
 {
     for (size_t n=0;n<chunk->count;n++) {
 
@@ -179,20 +179,19 @@ void draw_worker(void* arg)
                 switch (cmd->draw.type) {
                     
                     case BL_VBO_POINTS:
-                        bl_raster_draw_points(raster,vbo,cmd->draw.start,cmd->draw.count);
+                        bl_raster_draw_points(raster,cmd->draw.vbo,cmd->draw.start,cmd->draw.count);
                     break;
                     
                     case BL_VBO_LINES:
-                        bl_raster_draw_lines(raster,vbo,cmd->draw.start,cmd->draw.count);
+                        bl_raster_draw_lines(raster,cmd->draw.vbo,cmd->draw.start,cmd->draw.count);
                     break;
                     
                     case BL_VBO_TRIANGLES:
-                        bl_raster_draw_triangles(raster,vbo,cmd->draw.start,cmd->draw.count);
+                        bl_raster_draw_triangles(raster,cmd->draw.vbo,cmd->draw.start,cmd->draw.count);
                     break;
                 }
             break;
             
-            default:
         }
         
         bl_queue_push(raster->queue_free_commands,cmd);
@@ -228,14 +227,12 @@ void update_worker(void* arg)
             break;
             
             case BL_CMD_UPDATE:
-                bl_raster_update_chunk(raster,cmd->chunk);
+                bl_raster_update_chunk(raster,cmd->update.chunk);
                 
-                bl_queue_push(raster->queue_free_chunks,cmd->chunk);
+                bl_queue_push(raster->queue_free_chunks,cmd->update.chunk);
                 bl_queue_push(raster->queue_free_commands,cmd);
             break;
             
-            default:
-                
         }
     }
     
@@ -435,11 +432,46 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
 {
     bl_command_t* cmd;
     
-    cmd = bl_queue_pop(raster->cmd_queue_empty);
+    int nv=1;
+    size_t block=4096;
+    size_t count;
     
-    cmd->type = BL_CMD_DRAW;
+    size_t start=0;
+    size_t end;
     
-    bl_queue_push(raster->cmd_queue_out);
+    switch (type) {
+
+        case BL_VBO_LINES:
+            nv=2;
+        break;
+        
+        case BL_VBO_TRIANGLES:
+            nv=3;
+        break;
+    }
+    
+    count=vbo->size/nv;
+    size_t num=0;
+    
+    while (start<count) {
+        cmd = bl_queue_pop(raster->cmd_queue_empty);
+        
+        
+        num=(start*nv)+(block*nv);
+        num=MIN(num,vbo->size);
+        
+        cmd->type = BL_CMD_DRAW;
+        cmd->draw.type=type;
+        cmd->draw.vbo=vbo;
+        cmd->draw.start=start*nv;
+        cmd->draw.count=num;
+        
+        bl_queue_push(raster->queue_draw_commands,cmd);
+    
+        start+=block;
+    }
+    
+    
 }
 
 void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t count)

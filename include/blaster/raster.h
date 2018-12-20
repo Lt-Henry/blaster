@@ -65,7 +65,7 @@ typedef struct bl_command_u {
         } clear;
         
         struct {
-            vbo_t* vbo;
+            bl_vbo_t* vbo;
             uint8_t type;
             size_t start;
             size_t count;
