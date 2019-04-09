@@ -181,6 +181,8 @@ void* draw_worker(void* arg)
             break;
         }
         
+        printf("draw cmd: %d\n",cmd->type);
+        
         switch (cmd->type) {
         
             case BL_CMD_DRAW:
@@ -203,9 +205,12 @@ void* draw_worker(void* arg)
         }
         
         bl_queue_push(raster->queue_free_commands,cmd);
+        printf("draw cmd done\n");
     }
     
     printf("Draw worker is done\n");
+    
+    return NULL;
 }
 
 /*!
@@ -226,6 +231,7 @@ void* update_worker(void* arg)
         if (cmd==NULL) {
             break;
         }
+        printf("update cmd: %d\n",cmd->type);
         
         switch (cmd->type) {
         
@@ -242,9 +248,13 @@ void* update_worker(void* arg)
             break;
             
         }
+        
+        printf("update cmd done\n");
     }
     
     printf("update worker is done\n");
+    
+    return NULL;
 }
 
 bl_raster_t* bl_raster_new(int width,int height)
@@ -338,6 +348,8 @@ void bl_raster_clear(bl_raster_t* raster)
 {
     bl_command_t* cmd;
     
+    printf("clear buffers...\n");
+    
     // obtain a free command
     cmd = bl_queue_pop(raster->queue_free_commands);
     
@@ -414,7 +426,7 @@ void bl_raster_clear_buffers(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
-    
+    printf("waiting to complete...\n");
     while (!bl_queue_is_full(raster->queue_free_commands)) {
     }
 }
@@ -465,7 +477,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         cmd->draw.vbo=vbo;
         cmd->draw.start=start*nv;
         cmd->draw.count=num;
-        
+        printf("pushing a draw job [%d,%d]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
     
         start+=block;
@@ -553,7 +565,7 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t
         fragment.x=win[0];
         fragment.y=win[1];
         fragment.depth=win[2];
-        bl_raster_put_fragment(raster,&fragment);
+        bl_raster_put_fragment(raster,&chunk,&fragment);
         
         /*
         bl_pixel_t pixel=bl_color_get_pixel(&source[n].color);
@@ -594,6 +606,12 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
         bl_vector_t pos;
         bl_color_t color;
     } point_t;
+    
+    bl_fragment_chunk_t* chunk;
+    
+    //get a free chunk
+    chunk = bl_queue_pop(raster->queue_free_chunks);
+
 
     point_t* source = (point_t*) vbo->data;
     
@@ -694,7 +712,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
                 if (fragment.x>0 && fragment.x<xlimit &&
                     fragment.y>0 && fragment.y<ylimit) {
                     
-                    bl_raster_put_fragment(raster,&fragment);
+                    bl_raster_put_fragment(raster,&chunk,&fragment);
                 
                 }
                 
@@ -716,7 +734,7 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
                 if (fragment.x>0 && fragment.x<xlimit &&
                     fragment.y>0 && fragment.y<ylimit) {
                     
-                    bl_raster_put_fragment(raster,&fragment);
+                    bl_raster_put_fragment(raster,&chunk,&fragment);
                 
                 }
                 
