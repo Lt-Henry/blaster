@@ -113,14 +113,29 @@ static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chu
     (*chunk)->buffer[(*chunk)->count]=*fragment;
     (*chunk)->count++;
     if ((*chunk)->count==(*chunk)->size) {
-
+        printf("Filled chunk!\n");
         bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
         cmd->type = BL_CMD_UPDATE;
         cmd->update.chunk=*chunk;
-        
+        printf("pushing chunk...\n");
         bl_queue_push(raster->queue_update_commands,cmd);
+        printf("requesting a new chunk...\n");
         *chunk = bl_queue_pop(raster->queue_free_chunks);
+        printf("done\n");
     }
+}
+
+static void bl_raster_commit_chunk(bl_raster_t* raster,
+bl_fragment_chunk_t** chunk)
+{
+    printf("commit chunk\n");
+    bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
+    cmd->type = BL_CMD_UPDATE;
+    cmd->update.chunk=*chunk;
+    
+    bl_queue_push(raster->queue_update_commands,cmd);
+    
+    *chunk=NULL;
 }
 
 static void bl_raster_alloc_chunks(bl_raster_t* raster)
@@ -161,6 +176,8 @@ void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk)
             *cbuffer=chunk->buffer[n].pixel;
         }
     }
+    
+    chunk->count=0;
 }
 
 /*!
@@ -471,13 +488,14 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         
         num=(start*nv)+(block*nv);
         num=min_u32(num,vbo->size);
+        num=num-(start*nv);
         
         cmd->type = BL_CMD_DRAW;
         cmd->draw.type=type;
         cmd->draw.vbo=vbo;
         cmd->draw.start=start*nv;
         cmd->draw.count=num;
-        printf("pushing a draw job [%d,%d]\n",start*nv,num);
+        printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
     
         start+=block;
@@ -598,6 +616,8 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t
         }
         */
     }
+    
+    bl_raster_commit_chunk(raster,&chunk);
 }
 
 void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
@@ -747,6 +767,8 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
         }
         
     }
+    
+    bl_raster_commit_chunk(raster,&chunk);
 }
 
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)

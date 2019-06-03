@@ -21,6 +21,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 bl_queue_t* bl_queue_new(int size)
 {
