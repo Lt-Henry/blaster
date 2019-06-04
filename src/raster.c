@@ -113,22 +113,17 @@ static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chu
     (*chunk)->buffer[(*chunk)->count]=*fragment;
     (*chunk)->count++;
     if ((*chunk)->count==(*chunk)->size) {
-        printf("Filled chunk!\n");
         bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
         cmd->type = BL_CMD_UPDATE;
         cmd->update.chunk=*chunk;
-        printf("pushing chunk...\n");
         bl_queue_push(raster->queue_update_commands,cmd);
-        printf("requesting a new chunk...\n");
         *chunk = bl_queue_pop(raster->queue_free_chunks);
-        printf("done\n");
     }
 }
 
 static void bl_raster_commit_chunk(bl_raster_t* raster,
 bl_fragment_chunk_t** chunk)
 {
-    printf("commit chunk\n");
     bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
     cmd->type = BL_CMD_UPDATE;
     cmd->update.chunk=*chunk;
@@ -198,7 +193,7 @@ void* draw_worker(void* arg)
             break;
         }
         
-        printf("draw cmd: %d\n",cmd->type);
+        //printf("draw cmd: %d\n",cmd->type);
         
         switch (cmd->type) {
         
@@ -222,7 +217,7 @@ void* draw_worker(void* arg)
         }
         
         bl_queue_push(raster->queue_free_commands,cmd);
-        printf("draw cmd done\n");
+        //printf("draw cmd done\n");
     }
     
     printf("Draw worker is done\n");
@@ -248,7 +243,7 @@ void* update_worker(void* arg)
         if (cmd==NULL) {
             break;
         }
-        printf("update cmd: %d\n",cmd->type);
+        //printf("update cmd: %d\n",cmd->type);
         
         switch (cmd->type) {
         
@@ -266,7 +261,7 @@ void* update_worker(void* arg)
             
         }
         
-        printf("update cmd done\n");
+        //printf("update cmd done\n");
     }
     
     printf("update worker is done\n");
@@ -365,7 +360,7 @@ void bl_raster_clear(bl_raster_t* raster)
 {
     bl_command_t* cmd;
     
-    printf("clear buffers...\n");
+    //printf("clear buffers...\n");
     
     // obtain a free command
     cmd = bl_queue_pop(raster->queue_free_commands);
@@ -443,7 +438,7 @@ void bl_raster_clear_buffers(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
-    printf("waiting to complete...\n");
+    //printf("waiting to complete...\n");
     while (!bl_queue_is_full(raster->queue_free_commands)) {
     }
 }
@@ -495,7 +490,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         cmd->draw.vbo=vbo;
         cmd->draw.start=start*nv;
         cmd->draw.count=num;
-        printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
+        //printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
     
         start+=block;

@@ -80,7 +80,7 @@ void* bl_queue_pop(bl_queue_t* queue)
     }
     
     queue->size--;
-    
+    if(queue->size<0)printf("queue underrun!\n");
     value=queue->data[queue->begin];
     queue->begin=(queue->begin+1)%queue->capacity;
     
