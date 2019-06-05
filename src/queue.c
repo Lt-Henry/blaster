@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 bl_queue_t* bl_queue_new(int size)
 {
@@ -56,7 +57,7 @@ void bl_queue_push(bl_queue_t* queue,void* value)
     
     pthread_mutex_lock(&queue->mutex);
     
-    if (queue->size >= queue->capacity) {
+    while (queue->size >= queue->capacity) {
         pthread_cond_wait(&queue->full,&queue->mutex);
     }
     queue->size++;
@@ -75,12 +76,12 @@ void* bl_queue_pop(bl_queue_t* queue)
     
     pthread_mutex_lock(&queue->mutex);
     
-    if (queue->size==0) {
+    while (queue->size==0) {
         pthread_cond_wait(&queue->empty,&queue->mutex);
     }
     
     queue->size--;
-    if(queue->size<0)printf("queue underrun!\n");
+    assert(queue->size>=0);
     value=queue->data[queue->begin];
     queue->begin=(queue->begin+1)%queue->capacity;
     
