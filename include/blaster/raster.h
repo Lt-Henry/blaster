@@ -34,9 +34,9 @@ extern "C" {
 
 #include <pthread.h>
 
-#define BL_MAX_CHUNKS       4
+#define BL_MAX_CHUNKS       128
 #define BL_MAX_FRAGMENTS    32767
-#define BL_MAX_COMMANDS     16
+#define BL_MAX_COMMANDS     64
 
 typedef struct bl_fragment_u {
     int16_t x;
@@ -151,6 +151,16 @@ void bl_raster_clear(bl_raster_t* raster);
 void bl_raster_update(bl_raster_t* raster);
 
 /*!
+    Wait for all draw commands to complete
+*/
+void bl_raster_flush_draw(bl_raster_t* raster);
+
+/*!
+    Wait for all update commands to complete
+*/
+void bl_raster_flush_update(bl_raster_t* raster);
+
+/*!
     Get width in pixels
 */
 int bl_raster_get_width(bl_raster_t* raster);
@@ -164,7 +174,6 @@ int bl_raster_get_height(bl_raster_t* raster);
     Draws a vertex buffer (user-side function)
 */
 void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type);
-
 
 #ifdef __cplusplus
 }

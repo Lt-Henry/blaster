@@ -443,6 +443,19 @@ void bl_raster_update(bl_raster_t* raster)
     }
 }
 
+void bl_raster_flush_draw(bl_raster_t* raster)
+{
+    while (!bl_queue_is_empty(raster->queue_draw_commands)) {
+    }
+
+}
+
+void bl_raster_flush_update(bl_raster_t* raster)
+{
+    while (!bl_queue_is_empty(raster->queue_update_commands)) {
+    }
+}
+
 int bl_raster_get_width(bl_raster_t* raster)
 {
     return raster->screen_width;
