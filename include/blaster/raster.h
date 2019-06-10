@@ -34,8 +34,8 @@ extern "C" {
 
 #include <pthread.h>
 
-#define BL_MAX_CHUNKS       128
-#define BL_MAX_FRAGMENTS    32767
+#define BL_MAX_CHUNKS       64
+#define BL_MAX_FRAGMENTS    65536
 #define BL_MAX_COMMANDS     64
 
 typedef struct bl_fragment_u {
@@ -115,7 +115,7 @@ typedef struct {
     bl_queue_t* queue_update_commands;
     bl_queue_t* queue_draw_commands;
     
-    pthread_t thread_draw[2];
+    pthread_t thread_draw[4];
     pthread_t thread_update;
     
 } bl_raster_t;

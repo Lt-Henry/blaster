@@ -308,6 +308,7 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     pthread_create(&raster->thread_draw[0],NULL,draw_worker,raster);
     pthread_create(&raster->thread_draw[1],NULL,draw_worker,raster);
+    //pthread_create(&raster->thread_draw[2],NULL,draw_worker,raster);
     pthread_create(&raster->thread_update,NULL,update_worker,raster);
 
     return raster;
@@ -319,6 +320,7 @@ void bl_raster_delete(bl_raster_t* raster)
     pthread_cancel(raster->thread_update);
     pthread_cancel(raster->thread_draw[0]);
     pthread_cancel(raster->thread_draw[1]);
+    //pthread_cancel(raster->thread_draw[2]);
 
     bl_queue_delete(raster->queue_free_chunks);
     bl_queue_delete(raster->queue_free_commands);
@@ -541,10 +543,10 @@ void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t
     // precompute modelview and projection matrix
     bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
-    for (size_t n=0;n<vbo->size;n++) {
+    for (size_t n=0;n<count;n++) {
         
         //clip coordinates
-        bl_vector_mult(&clip,&source[n].pos,&matrix);
+        bl_vector_mult(&clip,&source[start+n].pos,&matrix);
         //__builtin_prefetch(color);
         //w-divide for NDC coordinates
         float w=1.0f/clip.w;
@@ -665,9 +667,9 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
     
     bl_fragment_t fragment;
     
-    for (size_t n=0;n<vbo->size;n+=2) {
-        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
-        bl_vector_mult(&clip[1],&source[n+1].pos,&matrix);
+    for (size_t n=0;n<count;n+=2) {
+        bl_vector_mult(&clip[0],&source[start+n].pos,&matrix);
+        bl_vector_mult(&clip[1],&source[start+n+1].pos,&matrix);
         //bl_vector_mult_dual(&clip[0],&source[n].pos,&clip[1],&source[n+1].pos,&matrix);
         
         //float w=1.0f/clip[0].w;
