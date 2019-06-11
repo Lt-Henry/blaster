@@ -26,6 +26,7 @@ extern "C" {
 
 #include <pthread.h>
 
+
 /*! async queue */
 typedef struct {
 
@@ -33,10 +34,8 @@ typedef struct {
     int capacity;
     int begin;
     int end;
-    int size;
-    pthread_mutex_t mutex;
-    pthread_cond_t full;
-    pthread_cond_t empty;
+    atomic_int size;
+    atomic_flag lock;
 } bl_queue_t;
 
 bl_queue_t* bl_queue_new(int size);

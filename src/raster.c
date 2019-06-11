@@ -473,7 +473,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     bl_command_t* cmd;
     
     int nv=1;
-    size_t block=4096;
+    size_t block=4096*8;
     size_t count;
     
     size_t start=0;
