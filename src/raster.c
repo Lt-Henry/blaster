@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 
 /*
@@ -442,12 +443,14 @@ void bl_raster_update(bl_raster_t* raster)
 {
     //printf("waiting to complete...\n");
     while (!bl_queue_is_full(raster->queue_free_commands)) {
+        usleep(500);
     }
 }
 
 void bl_raster_flush_draw(bl_raster_t* raster)
 {
     while (!bl_queue_is_empty(raster->queue_draw_commands)) {
+        usleep(250);
     }
 
 }

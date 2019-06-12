@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <unistd.h>
 
 bl_queue_t* bl_queue_new(int size)
 {
@@ -56,6 +57,7 @@ void bl_queue_push(bl_queue_t* queue,void* value)
     
     if (queue->size>=queue->capacity) {
         atomic_flag_clear(&queue->lock);
+        usleep(250);
         goto loop;
     }
     
@@ -78,6 +80,7 @@ void* bl_queue_pop(bl_queue_t* queue)
     
     if (queue->size<=0) {
         atomic_flag_clear(&queue->lock);
+        usleep(250);
         goto loop;
     }
     
