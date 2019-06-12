@@ -21,7 +21,11 @@
 #define BLASTER_QUEUE
 
 #ifdef __cplusplus
+typedef int atomic_int;
+typedef bool atomic_flag;
 extern "C" {
+#else
+#include <stdatomic.h>
 #endif
 
 #include <pthread.h>
