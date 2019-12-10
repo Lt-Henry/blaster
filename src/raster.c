@@ -798,6 +798,11 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         uint32_t w;
     } window_vertex_t;
     
+    bl_fragment_chunk_t* chunk;
+    
+    //get a free chunk
+    chunk = bl_queue_pop(raster->queue_free_chunks);
+    
     vertex_t* source = (vertex_t*) vbo->data;
     
     bl_matrix_t matrix;
@@ -886,5 +891,19 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         
         ymin = max_u32(0,ymin);
         ymax = min_u32(raster->screen_height,ymax);
+        
+        bl_fragment_t fragment;
+        
+        for (uint32_t x=xmin;x!=xmax;xmin++) {
+            for (uint32_t y=ymin;y!=ymax;y++) {
+                
+                fragment.x=x;
+                fragment.y=y;
+                fragment.pixel=0xffff0000;
+                
+                
+                
+            }
+        }
     }
 }
