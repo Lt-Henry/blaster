@@ -194,7 +194,7 @@ void* draw_worker(void* arg)
             break;
         }
         
-        //printf("draw cmd: %d\n",cmd->type);
+        printf("draw cmd: %d\n",cmd->type);
         
         switch (cmd->type) {
         
@@ -218,7 +218,7 @@ void* draw_worker(void* arg)
         }
         
         bl_queue_push(raster->queue_free_commands,cmd);
-        //printf("draw cmd done\n");
+        printf("draw cmd done\n");
     }
     
     printf("Draw worker is done\n");
@@ -508,7 +508,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         cmd->draw.vbo=vbo;
         cmd->draw.start=start*nv;
         cmd->draw.count=num;
-        //printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
+        printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
     
         start+=block;
@@ -788,6 +788,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
 {
     typedef struct {
         bl_vector_t pos;
+        bl_vector_t normal;
         bl_color_t color;
     } vertex_t;
     
@@ -822,10 +823,10 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     // precompute modelview and projection matrix
     bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
-    for (size_t n=0;n<vbo->size;n+=3) {
-        bl_vector_mult(&clip[0],&source[n].pos,&matrix);
-        bl_vector_mult(&clip[1],&source[n].pos,&matrix);
-        bl_vector_mult(&clip[2],&source[n].pos,&matrix);
+    for (size_t n=0;n<count;n+=3) {
+        bl_vector_mult(&clip[0],&source[start+n].pos,&matrix);
+        bl_vector_mult(&clip[1],&source[start+n+1].pos,&matrix);
+        bl_vector_mult(&clip[2],&source[start+n+2].pos,&matrix);
         
         float w;
         
@@ -899,11 +900,14 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                 
                 fragment.x=x;
                 fragment.y=y;
-                fragment.pixel=0xffff0000;
+                fragment.pixel=0xffff00ff;
+                fragment.depth=wv[0].z;
                 
-                
+                bl_raster_put_fragment(raster,&chunk,&fragment);
                 
             }
         }
     }
+    
+    bl_raster_commit_chunk(raster,&chunk);
 }
