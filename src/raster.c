@@ -59,7 +59,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo, size_t start,s
 void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk);
 
 
-static int max_u32(uint32_t a,uint32_t b)
+static uint32_t max_u32(uint32_t a,uint32_t b)
 {
     if (a>b) {
         return a;
@@ -69,7 +69,7 @@ static int max_u32(uint32_t a,uint32_t b)
     }
 }
 
-static int min_u32(uint32_t a,uint32_t b)
+static uint32_t min_u32(uint32_t a,uint32_t b)
 {
     if (a<b) {
         return a;
@@ -194,7 +194,7 @@ void* draw_worker(void* arg)
             break;
         }
         
-        printf("draw cmd: %d\n",cmd->type);
+        //printf("draw cmd: %d\n",cmd->type);
         
         switch (cmd->type) {
         
@@ -218,7 +218,7 @@ void* draw_worker(void* arg)
         }
         
         bl_queue_push(raster->queue_free_commands,cmd);
-        printf("draw cmd done\n");
+        //printf("draw cmd done\n");
     }
     
     printf("Draw worker is done\n");
@@ -309,7 +309,7 @@ bl_raster_t* bl_raster_new(int width,int height)
     
     pthread_create(&raster->thread_draw[0],NULL,draw_worker,raster);
     pthread_create(&raster->thread_draw[1],NULL,draw_worker,raster);
-    //pthread_create(&raster->thread_draw[2],NULL,draw_worker,raster);
+    pthread_create(&raster->thread_draw[2],NULL,draw_worker,raster);
     pthread_create(&raster->thread_update,NULL,update_worker,raster);
 
     return raster;
@@ -321,7 +321,7 @@ void bl_raster_delete(bl_raster_t* raster)
     pthread_cancel(raster->thread_update);
     pthread_cancel(raster->thread_draw[0]);
     pthread_cancel(raster->thread_draw[1]);
-    //pthread_cancel(raster->thread_draw[2]);
+    pthread_cancel(raster->thread_draw[2]);
 
     bl_queue_delete(raster->queue_free_chunks);
     bl_queue_delete(raster->queue_free_commands);
@@ -508,7 +508,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         cmd->draw.vbo=vbo;
         cmd->draw.start=start*nv;
         cmd->draw.count=num;
-        printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
+        //printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
     
         start+=block;
@@ -784,8 +784,22 @@ void bl_raster_draw_lines(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t
     bl_raster_commit_chunk(raster,&chunk);
 }
 
+static int32_t orient(int32_t x0, int32_t y0, int32_t x1,int32_t y1, int32_t x2, int32_t y2)
+{
+    return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+}
+
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
+    const uint32_t palette[] = {
+        0xaa0000ff,
+        0x00aa00ff,
+        0x0000aaff,
+        0xaaaa00ff,
+        0x00aaaaff,
+        0x0aaaa0ff
+    };
+    
     typedef struct {
         bl_vector_t pos;
         bl_vector_t normal;
@@ -859,28 +873,28 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
             wv[i].z=(ndc[i].z*wl.z)+wl.z;
         }
         
-        uint32_t xmin = min_u32(wv[0].x,wv[1].x);
-        xmin = max_u32(xmin,wv[2].x);
+        int32_t xmin = min_u32(wv[0].x,wv[1].x);
+        xmin = min_u32(xmin,wv[2].x);
         
         if (xmin>=raster->screen_width) {
             continue;
         }
         
-        uint32_t xmax = max_u32(wv[0].x,wv[1].x);
+        int32_t xmax = max_u32(wv[0].x,wv[1].x);
         xmax = max_u32(xmax,wv[2].x);
         
         if (xmax<0) {
             continue;
         }
         
-        uint32_t ymin = min_u32(wv[0].y,wv[1].y);
-        ymin = max_u32(ymin,wv[2].y);
+        int32_t ymin = min_u32(wv[0].y,wv[1].y);
+        ymin = min_u32(ymin,wv[2].y);
         
         if (ymin>=raster->screen_height) {
             continue;
         }
         
-        uint32_t ymax = max_u32(wv[0].y,wv[1].y);
+        int32_t ymax = max_u32(wv[0].y,wv[1].y);
         ymax = max_u32(ymax,wv[2].y);
         
         if (ymax<0) {
@@ -895,16 +909,23 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         
         bl_fragment_t fragment;
         
-        for (uint32_t x=xmin;x!=xmax;xmin++) {
-            for (uint32_t y=ymin;y!=ymax;y++) {
+        int32_t q[4];
+        
+        for (int32_t x=xmin;x!=xmax;x++) {
+            for (int32_t y=ymin;y!=ymax;y++) {
                 
-                fragment.x=x;
-                fragment.y=y;
-                fragment.pixel=0xffff00ff;
-                fragment.depth=wv[0].z;
+                q[0]=orient(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
+                q[1]=orient(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
+                q[2]=orient(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
                 
-                bl_raster_put_fragment(raster,&chunk,&fragment);
-                
+                if (q[0]>0 && q[1]>0 && q[2]>0) {
+                    fragment.x=x;
+                    fragment.y=y;
+                    fragment.pixel=palette[n%6];
+                    fragment.depth=wv[0].z;
+                    
+                    bl_raster_put_fragment(raster,&chunk,&fragment);
+                }
             }
         }
     }

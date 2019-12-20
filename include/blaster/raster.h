@@ -35,7 +35,7 @@ extern "C" {
 #include <pthread.h>
 
 #define BL_MAX_CHUNKS       128
-#define BL_MAX_FRAGMENTS    65535
+#define BL_MAX_FRAGMENTS    32767
 #define BL_MAX_COMMANDS     128
 
 typedef struct bl_fragment_u {
