@@ -109,21 +109,27 @@ typedef struct {
     bl_fragment_chunk_t chunks[BL_MAX_CHUNKS];
     bl_queue_t* queue_free_chunks;
     
-    bl_command_t commands[BL_MAX_COMMANDS];
-    bl_queue_t* queue_free_commands;
+    bl_command_t draw_commands[BL_MAX_COMMANDS];
+    bl_command_t update_commands[BL_MAX_COMMANDS];
+    
+    bl_queue_t* queue_free_draw_commands;
+    bl_queue_t* queue_free_update_commands;
     
     bl_queue_t* queue_update_commands;
     bl_queue_t* queue_draw_commands;
     
-    pthread_t thread_draw[4];
-    pthread_t thread_update;
+    int draw_workers;
+    int update_workers;
+    
+    pthread_t* thread_draw;
+    pthread_t* thread_update;
     
 } bl_raster_t;
 
 /*!
     Create a new raster
 */
-bl_raster_t* bl_raster_new(int width,int height);
+bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_workers);
 
 /*!
     Free raster

@@ -28,7 +28,6 @@
 #define BL_F32    0x44
 #define BL_F64    0x85
 
-
 /*! texture types */
 #define BL_TEXTURE_U8    0
 #define BL_TEXTURE_U16   1
@@ -48,6 +47,7 @@
 #define BL_CMD_CLEAR    2 /*! clear */
 #define BL_CMD_DRAW     3 /*! render */
 #define BL_CMD_UPDATE   4 /*! update fragments */
+#define BL_CMD_SYNC     5
 
 /*! vbo types */
 #define BL_VBO_POINTS       1

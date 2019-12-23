@@ -132,7 +132,7 @@ int main(int argc,char* argv[])
     
     printf("\ntesting raster:\n");
     
-    bl_raster_t* raster = bl_raster_new(1024,768);
+    bl_raster_t* raster = bl_raster_new(1024,768,1,1);
     
     struct {
         bl_vector_t pos;

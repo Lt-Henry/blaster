@@ -27,9 +27,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
 
-
-/*
+uint64_t get_us()
+{
+    struct timeval t;
+    
+    gettimeofday(&t, NULL);
+    
+    return (t.tv_sec*1000*1000)+t.tv_usec;
+}
+    /*
     Internal raster functions
 */
 
@@ -114,7 +122,7 @@ static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chu
     (*chunk)->buffer[(*chunk)->count]=*fragment;
     (*chunk)->count++;
     if ((*chunk)->count==(*chunk)->size) {
-        bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
+        bl_command_t* cmd = bl_queue_pop(raster->queue_free_update_commands);
         cmd->type = BL_CMD_UPDATE;
         cmd->update.chunk=*chunk;
         bl_queue_push(raster->queue_update_commands,cmd);
@@ -125,7 +133,7 @@ static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chu
 static void bl_raster_commit_chunk(bl_raster_t* raster,
 bl_fragment_chunk_t** chunk)
 {
-    bl_command_t* cmd = bl_queue_pop(raster->queue_free_commands);
+    bl_command_t* cmd = bl_queue_pop(raster->queue_free_update_commands);
     cmd->type = BL_CMD_UPDATE;
     cmd->update.chunk=*chunk;
     
@@ -217,7 +225,7 @@ void* draw_worker(void* arg)
             
         }
         
-        bl_queue_push(raster->queue_free_commands,cmd);
+        bl_queue_push(raster->queue_free_draw_commands,cmd);
         //printf("draw cmd done\n");
     }
     
@@ -236,6 +244,10 @@ void* update_worker(void* arg)
     printf("Update worker started!\n");
     
     
+    size_t fragments=0;
+    uint64_t t1,t2;
+    uint64_t delta;
+    
     while (1) {
         bl_command_t* cmd;
         
@@ -249,15 +261,27 @@ void* update_worker(void* arg)
         switch (cmd->type) {
         
             case BL_CMD_CLEAR:
+                
+                if (delta>1000000) {
+                    printf("* fragments per second: %d\n",fragments);
+                    printf("* fillrate: %d MB/s\n",(fragments*sizeof(bl_fragment_t))/(1024*1024));
+                    fragments=0;
+                    delta=0;
+                }
+                
                 bl_raster_clear_buffers(raster);
-                bl_queue_push(raster->queue_free_commands,cmd);
+                bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
             
             case BL_CMD_UPDATE:
+                fragments+=cmd->update.chunk->count;
+                t1=get_us();
                 bl_raster_update_chunk(raster,cmd->update.chunk);
+                t2=get_us();
+                delta+=(t2-t1);
                 
                 bl_queue_push(raster->queue_free_chunks,cmd->update.chunk);
-                bl_queue_push(raster->queue_free_commands,cmd);
+                bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
             
         }
@@ -270,7 +294,7 @@ void* update_worker(void* arg)
     return NULL;
 }
 
-bl_raster_t* bl_raster_new(int width,int height)
+bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_workers)
 {
     bl_raster_t* raster;
 
@@ -299,18 +323,30 @@ bl_raster_t* bl_raster_new(int width,int height)
     raster->queue_update_commands=bl_queue_new(BL_MAX_COMMANDS);
     raster->queue_draw_commands=bl_queue_new(BL_MAX_COMMANDS);
     
-    raster->queue_free_commands=bl_queue_new(BL_MAX_COMMANDS);
+    raster->queue_free_draw_commands=bl_queue_new(BL_MAX_COMMANDS);
+    raster->queue_free_update_commands=bl_queue_new(BL_MAX_COMMANDS);
     
     // fill free commands
     for (int n=0;n<BL_MAX_COMMANDS;n++) {
-        raster->commands[n].type=BL_CMD_NONE;
-        bl_queue_push(raster->queue_free_commands,&raster->commands[n]);
+        raster->draw_commands[n].type=BL_CMD_NONE;
+        bl_queue_push(raster->queue_free_draw_commands,&raster->draw_commands[n]);
+        
+        raster->update_commands[n].type=BL_CMD_NONE;
+        bl_queue_push(raster->queue_free_update_commands,&raster->update_commands[n]);
     }
     
-    pthread_create(&raster->thread_draw[0],NULL,draw_worker,raster);
-    pthread_create(&raster->thread_draw[1],NULL,draw_worker,raster);
-    pthread_create(&raster->thread_draw[2],NULL,draw_worker,raster);
-    pthread_create(&raster->thread_update,NULL,update_worker,raster);
+    raster->draw_workers=draw_workers;
+    raster->update_workers=update_workers;
+    
+    raster->thread_draw=malloc(draw_workers*sizeof(pthread_t));
+    raster->thread_update=malloc(update_workers*sizeof(pthread_t));
+    
+    for (int n=0;n<draw_workers;n++) {
+        pthread_create(&raster->thread_draw[n],NULL,draw_worker,raster);
+    }
+    for (int n=0;n<update_workers;n++) {
+        pthread_create(&raster->thread_update[n],NULL,update_worker,raster);
+    }
 
     return raster;
 }
@@ -318,13 +354,20 @@ bl_raster_t* bl_raster_new(int width,int height)
 void bl_raster_delete(bl_raster_t* raster)
 {
 
-    pthread_cancel(raster->thread_update);
-    pthread_cancel(raster->thread_draw[0]);
-    pthread_cancel(raster->thread_draw[1]);
-    pthread_cancel(raster->thread_draw[2]);
-
+    for (int n=0;n<raster->draw_workers;n++) {
+        pthread_cancel(raster->thread_draw[n]);
+    }
+    
+    for (int n=0;n<raster->update_workers;n++) {
+        pthread_cancel(raster->thread_update[n]);
+    }
+    
+    free(raster->thread_draw);
+    free(raster->thread_update);
+    
     bl_queue_delete(raster->queue_free_chunks);
-    bl_queue_delete(raster->queue_free_commands);
+    bl_queue_delete(raster->queue_free_draw_commands);
+    bl_queue_delete(raster->queue_free_update_commands);
     bl_queue_delete(raster->queue_update_commands);
     bl_queue_delete(raster->queue_draw_commands);
     
@@ -366,7 +409,7 @@ void bl_raster_clear(bl_raster_t* raster)
     //printf("clear buffers...\n");
     
     // obtain a free command
-    cmd = bl_queue_pop(raster->queue_free_commands);
+    cmd = bl_queue_pop(raster->queue_free_update_commands);
     
     cmd->type=BL_CMD_CLEAR;
     
@@ -441,23 +484,20 @@ void bl_raster_clear_buffers(bl_raster_t* raster)
 
 void bl_raster_update(bl_raster_t* raster)
 {
-    //printf("waiting to complete...\n");
-    while (!bl_queue_is_full(raster->queue_free_commands)) {
-        usleep(500);
-    }
+
 }
 
 void bl_raster_flush_draw(bl_raster_t* raster)
 {
-    while (!bl_queue_is_empty(raster->queue_draw_commands)) {
+    while (!bl_queue_is_full(raster->queue_free_draw_commands)) {
         usleep(250);
     }
-
 }
 
 void bl_raster_flush_update(bl_raster_t* raster)
 {
-    while (!bl_queue_is_empty(raster->queue_update_commands)) {
+    while (!bl_queue_is_full(raster->queue_free_update_commands)) {
+        usleep(250);
     }
 }
 
@@ -497,7 +537,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     size_t num=0;
     
     while (start<count) {
-        cmd = bl_queue_pop(raster->queue_free_commands);
+        cmd = bl_queue_pop(raster->queue_free_draw_commands);
         
         num=(start*nv)+(block*nv);
         num=min_u32(num,vbo->size);
