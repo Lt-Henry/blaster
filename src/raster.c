@@ -23,20 +23,13 @@
 #include <blaster/color.h>
 #include <blaster/vector.h>
 #include <blaster/matrix.h>
+#include <blaster/time.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
 
-uint64_t get_us()
-{
-    struct timeval t;
-    
-    gettimeofday(&t, NULL);
-    
-    return (t.tv_sec*1000*1000)+t.tv_usec;
-}
     /*
     Internal raster functions
 */
@@ -119,7 +112,11 @@ static float rcp(float x)
 
 static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chunk,bl_fragment_t* fragment)
 {
-    (*chunk)->buffer[(*chunk)->count]=*fragment;
+    //(*chunk)->buffer[(*chunk)->count]=*fragment;
+    __m128i A=_mm_loadu_si128((__m128i*)fragment);
+    __m128i* D=&((*chunk)->buffer[(*chunk)->count]);
+    _mm_stream_si128(D,A);
+    
     (*chunk)->count++;
     if ((*chunk)->count==(*chunk)->size) {
         bl_command_t* cmd = bl_queue_pop(raster->queue_free_update_commands);
@@ -245,8 +242,12 @@ void* update_worker(void* arg)
     
     
     size_t fragments=0;
-    uint64_t t1,t2;
+    uint64_t t1,t2,t3;
     uint64_t delta;
+    int frames=0;
+    int commands=0;
+    
+    uint64_t cltime = bl_time_us();
     
     while (1) {
         bl_command_t* cmd;
@@ -262,11 +263,23 @@ void* update_worker(void* arg)
         
             case BL_CMD_CLEAR:
                 
-                if (delta>1000000) {
+                t3=bl_time_us();
+                frames++;
+                
+                if ((t3-cltime) > 1000000) {
+                    
+                    //printf("* wait time: %d\n",cltime-delta);
+                    printf("* idle time: %d ms\n",delta/1000);
+                    printf("* idle time per frame: %d ms\n",delta/1000/frames);
+                    printf("* chunks per second: %d\n",commands);
+                    printf("* chunks per frame: %d\n",commands/frames);
                     printf("* fragments per second: %d\n",fragments);
                     printf("* fillrate: %d MB/s\n",(fragments*sizeof(bl_fragment_t))/(1024*1024));
                     fragments=0;
                     delta=0;
+                    cltime = t3;
+                    frames=0;
+                    commands=0;
                 }
                 
                 bl_raster_clear_buffers(raster);
@@ -274,10 +287,11 @@ void* update_worker(void* arg)
             break;
             
             case BL_CMD_UPDATE:
+                commands++;
                 fragments+=cmd->update.chunk->count;
-                t1=get_us();
+                t1=bl_time_us();
                 bl_raster_update_chunk(raster,cmd->update.chunk);
-                t2=get_us();
+                t2=bl_time_us();
                 delta+=(t2-t1);
                 
                 bl_queue_push(raster->queue_free_chunks,cmd->update.chunk);
@@ -961,7 +975,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                 if (q[0]>0 && q[1]>0 && q[2]>0) {
                     fragment.x=x;
                     fragment.y=y;
-                    fragment.pixel=palette[n%6];
+                    fragment.pixel=palette[(n/3)%6];
                     fragment.depth=wv[0].z;
                     
                     bl_raster_put_fragment(raster,&chunk,&fragment);
