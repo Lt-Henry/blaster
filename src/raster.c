@@ -112,12 +112,9 @@ static float rcp(float x)
 
 static void bl_raster_put_fragment(bl_raster_t* raster,bl_fragment_chunk_t** chunk,bl_fragment_t* fragment)
 {
-    //(*chunk)->buffer[(*chunk)->count]=*fragment;
-    __m128i A=_mm_loadu_si128((__m128i*)fragment);
-    __m128i* D=&((*chunk)->buffer[(*chunk)->count]);
-    _mm_stream_si128(D,A);
-    
+    (*chunk)->buffer[(*chunk)->count]=*fragment;
     (*chunk)->count++;
+    
     if ((*chunk)->count==(*chunk)->size) {
         bl_command_t* cmd = bl_queue_pop(raster->queue_free_update_commands);
         cmd->type = BL_CMD_UPDATE;
@@ -144,7 +141,7 @@ static void bl_raster_alloc_chunks(bl_raster_t* raster)
     for (size_t n=0;n<BL_MAX_CHUNKS;n++) {
         raster->chunks[n].size = BL_MAX_FRAGMENTS;
         raster->chunks[n].count = 0;
-        raster->chunks[n].buffer = malloc(sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
+        raster->chunks[n].buffer = aligned_alloc(64,sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
     }
 }
 

@@ -43,7 +43,7 @@ typedef struct bl_fragment_u {
     int16_t y;
     uint16_t depth;
     uint32_t pixel;
-    uint16_t padding[9];
+    //uint16_t padding[9];
 } bl_fragment_t;
 
 typedef struct bl_fragment_chunk_u {
