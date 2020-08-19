@@ -39,7 +39,7 @@
 #define BL_TILE_SIZE    64
 
 /*! command queue size */
-#define BL_CMD_SIZE	1024
+#define BL_CMD_SIZE 1024
 
 /*! commands */
 #define BL_CMD_NONE     0
@@ -56,12 +56,16 @@
 
 /*! vbo attribute types */
 #define BL_VBO_BYTE	0
-#define BL_VBO_FLOAT	1
-#define BL_VBO_INT32	2
+#define BL_VBO_FLOAT    1
+#define BL_VBO_INT32    2
 
 /*! vbo attribute settings */
-#define BL_VBO_IGNORE	1
-#define BL_VBO_LINEAR	2	/*! linear interpolation instead of perspective corrected */
+#define BL_VBO_IGNORE   1
+#define BL_VBO_LINEAR   2	/*! linear interpolation instead of perspective corrected */
 
+/*! error values */
+#define BL_OK   0
+#define BL_MEM_ERROR   1
+#define BL_INDEX_ERROR  2
 
 #endif

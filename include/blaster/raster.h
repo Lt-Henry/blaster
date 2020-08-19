@@ -127,6 +127,12 @@ typedef struct {
     
 } bl_raster_t;
 
+typedef struct {
+    bl_raster_t* raster;
+    uint64_t wait_time;
+    uint64_t working_time;
+} bl_worker_t;
+
 /*!
     Create a new raster
 */

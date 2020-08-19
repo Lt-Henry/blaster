@@ -47,11 +47,11 @@ void bl_vbo_delete(bl_vbo_t* vbo)
     free(vbo);
 }
 
-void bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
+int bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
 {
 
     if (index>=vbo->size) {
-        return;
+        return BL_INDEX_ERROR;
     }
     
     uint8_t* dest = (uint8_t*)vbo->data;
@@ -60,4 +60,5 @@ void bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
     
     memcpy(dest,value,vbo->vertex_size);
     
+    return BL_OK;
 }
