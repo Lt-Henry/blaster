@@ -47,6 +47,19 @@ void bl_vbo_delete(bl_vbo_t* vbo)
     free(vbo);
 }
 
+size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size)
+{
+    size_t new_size;
+    
+    new_size = vbo->size*vbo->vertex_size;
+    new_size = new_size / vertex_size;
+    
+    vbo->size = new_size;
+    vbo->vertex_size = vertex_size;
+    
+    return new_size;
+}
+
 int bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
 {
 

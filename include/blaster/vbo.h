@@ -51,6 +51,11 @@ bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size);
 */
 void bl_vbo_delete(bl_vbo_t* vbo);
 
+/*!
+    Reconfigure vbo for a new vertex size. No reallocation is done.
+    \return The new number of vertices vbo can hold
+*/
+size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size);
 
 /*!
     Sets a vertex with all it's attributes
