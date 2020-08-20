@@ -58,7 +58,7 @@ bl_texture_t* bl_texture_new(int width,int height,uint8_t type)
     texture->type=type;
     texture->bpp=bl_texture_get_bpp(type);
     
-    texture->data=aligned_alloc(16,texture->bpp*width*height);
+    texture->data=malloc(texture->bpp*width*height);
     texture->width=width;
     texture->height=height;
 

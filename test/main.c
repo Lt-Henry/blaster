@@ -107,14 +107,14 @@ int main(int argc,char* argv[])
     
     struct timespec start,end;
     
-    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
+    clock_gettime(CLOCK_MONOTONIC, &start);
     
     for (int n=0;n<0x2ffffff;n++) {
         bl_matrix_mult(&m3,&m1,&m2);
         bl_vector_mult(&v2,&v1,&m3);
     }
     
-    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    clock_gettime(CLOCK_MONOTONIC, &end);
 
     printf("%ld ms\n",get_ms(start,end));
     value=bl_vector_norm(&v2);

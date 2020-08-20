@@ -141,7 +141,7 @@ static void bl_raster_alloc_chunks(bl_raster_t* raster)
     for (size_t n=0;n<BL_MAX_CHUNKS;n++) {
         raster->chunks[n].size = BL_MAX_FRAGMENTS;
         raster->chunks[n].count = 0;
-        raster->chunks[n].buffer = aligned_alloc(64,sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
+        raster->chunks[n].buffer = malloc(sizeof(bl_fragment_t)*BL_MAX_FRAGMENTS);
     }
 }
 
