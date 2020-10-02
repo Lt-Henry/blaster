@@ -24,7 +24,6 @@
 extern "C" {
 #endif
 
-
 #include "constants.h"
 #include "texture.h"
 #include "matrix.h"
@@ -126,12 +125,6 @@ typedef struct {
     pthread_t* thread_update;
     
 } bl_raster_t;
-
-typedef struct {
-    bl_raster_t* raster;
-    uint64_t wait_time;
-    uint64_t working_time;
-} bl_worker_t;
 
 /*!
     Create a new raster
