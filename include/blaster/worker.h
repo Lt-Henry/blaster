@@ -36,7 +36,7 @@ struct bl_raster_t;
 typedef struct {
     bl_raster_t* raster;
     uint8_t type;
-    pthread_t* thread;
+    pthread_t thread;
     
     uint64_t wait_time;
     uint64_t working_time;
@@ -45,6 +45,8 @@ typedef struct {
 bl_worker_t* bl_worker_new(bl_raster_t* raster,uint8_t type,uint32_t flags);
 
 void bl_worker_delete(bl_worker_t* worker);
+
+void bl_worker_stop(bl_worker_t* worker);
 
 #ifdef __cplusplus
 }

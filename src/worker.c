@@ -32,6 +32,13 @@ bl_worker_t* bl_worker_new(bl_raster_t* raster,uint8_t type,uint32_t flags)
     worker->raster=raster;
     worker->type=type;
     
+    if (type==BL_WORKER_DRAW) {
+        pthread_create(&worker->thread,NULL,bl_worker_draw,worker);
+    }
+    else {
+        pthread_create(&worker->thread,NULL,bl_worker_update,worker);
+    }
+    
     return worker;
 }
 
@@ -40,9 +47,34 @@ void bl_worker_delete(bl_worker_t* worker)
     free(worker);
 }
 
+void bl_worker_stop(bl_worker_t* worker)
+{
+    pthread_cancel(worker->thread);
+}
+
 void* bl_worker_draw(void* arg)
 {
+    printf("draw worker ready\n");
     
+    bl_worker_t* worker = (bl_worker_t*)arg;
+    
+    while (1) {
+        bl_command_t* cmd;
+        
+        cmd=bl_queue_pop(worker->raster->queue_draw_commands);
+        
+        if (cmd==NULL) {
+            break;
+        }
+        
+        switch (cmd->type) {
+            
+        }
+    }
+    
+    printf("draw worker done\n");
+    
+    return NULL;
 }
 
 void* bl_worker_update(void* arg)
