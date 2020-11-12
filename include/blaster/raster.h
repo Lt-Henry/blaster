@@ -30,8 +30,7 @@ extern "C" {
 #include "matrix_stack.h"
 #include "vbo.h"
 #include "queue.h"
-
-#include <pthread.h>
+#include "worker.h"
 
 #define BL_MAX_CHUNKS       128
 #define BL_MAX_FRAGMENTS    32767
@@ -121,8 +120,7 @@ typedef struct {
     int draw_workers;
     int update_workers;
     
-    pthread_t* thread_draw;
-    pthread_t* thread_update;
+    bl_worker_t** workers;
     
 } bl_raster_t;
 

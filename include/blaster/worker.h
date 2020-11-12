@@ -26,15 +26,13 @@ extern "C" {
 
 #include "constants.h"
 
+#include <stdint.h>
 #include <pthread.h>
 
 #define BL_WORKER_DRAW 0
 #define BL_WORKER_UPDATE 1
 
-struct bl_raster_t;
-
 typedef struct {
-    bl_raster_t* raster;
     uint8_t type;
     pthread_t thread;
     
@@ -42,7 +40,9 @@ typedef struct {
     uint64_t working_time;
 } bl_worker_t;
 
-bl_worker_t* bl_worker_new(bl_raster_t* raster,uint8_t type,uint32_t flags);
+bl_worker_t* bl_worker_new(uint8_t type,uint32_t flags);
+
+void bl_worker_start(bl_worker_t* worker,void *(*func) (void *),void* args);
 
 void bl_worker_delete(bl_worker_t* worker);
 

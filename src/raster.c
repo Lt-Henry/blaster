@@ -349,14 +349,16 @@ bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_work
     raster->draw_workers=draw_workers;
     raster->update_workers=update_workers;
     
-    raster->thread_draw=malloc(draw_workers*sizeof(pthread_t));
-    raster->thread_update=malloc(update_workers*sizeof(pthread_t));
+    raster->workers=malloc((draw_workers+update_workers)*sizeof(bl_worker_t*));
     
-    for (int n=0;n<draw_workers;n++) {
-        pthread_create(&raster->thread_draw[n],NULL,draw_worker,raster);
+    int w=0;
+    for (int n=0;n<draw_workers;n++,w++) {
+        raster->workers[w]=bl_worker_new(BL_WORKER_DRAW,0);
+        bl_worker_start(raster->workers[w],draw_worker,raster);
     }
-    for (int n=0;n<update_workers;n++) {
-        pthread_create(&raster->thread_update[n],NULL,update_worker,raster);
+    for (int n=0;n<update_workers;n++,w++) {
+        raster->workers[w]=bl_worker_new(BL_WORKER_UPDATE,0);
+        bl_worker_start(raster->workers[w],update_worker,raster);
     }
 
     return raster;
@@ -364,17 +366,14 @@ bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_work
 
 void bl_raster_delete(bl_raster_t* raster)
 {
-
-    for (int n=0;n<raster->draw_workers;n++) {
-        pthread_cancel(raster->thread_draw[n]);
+    int num_workers=raster->draw_workers+raster->update_workers;
+    
+    for (int n=0;n<num_workers;n++) {
+        bl_worker_stop(raster->workers[n]);
+        bl_worker_delete(raster->workers[n]);
     }
     
-    for (int n=0;n<raster->update_workers;n++) {
-        pthread_cancel(raster->thread_update[n]);
-    }
-    
-    free(raster->thread_draw);
-    free(raster->thread_update);
+    free(raster->workers);
     
     bl_queue_delete(raster->queue_free_chunks);
     bl_queue_delete(raster->queue_free_draw_commands);
