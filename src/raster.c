@@ -87,6 +87,26 @@ static void swap_u32(uint32_t* a,uint32_t* b)
     *b=tmp;
 }
 
+static float max_f32(float a,float b)
+{
+    if (a>b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
+static float min_f32(float a,float b)
+{
+    if (a<b) {
+        return a;
+    }
+    else {
+        return b;
+    }
+}
+
 #ifdef BLASTER_RASTER_RCP_SSE
 static float rcp(float x)
 {
@@ -839,6 +859,11 @@ static int32_t orient(int32_t x0, int32_t y0, int32_t x1,int32_t y1, int32_t x2,
     return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
 }
 
+static float orientf(float x0, float y0, float x1,float y1, float x2, float y2)
+{
+    return (x1-x0)*(y2-y0) - (y1-y0)*(x2-x0);
+}
+
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
     const uint32_t palette[] = {
@@ -850,17 +875,28 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         0x0aaaa0ff
     };
     
+    bl_vector_t light_pos = {0.0f,0.0f,-1.0f,0.0f};
+    bl_color_t light_ambient = {0.5f,0.5f,0.5f,1.0f};
+    bl_color_t light_diffuse = {1.0f,1.0f,1.0f,1.0f};
+    
     typedef struct {
         bl_vector_t pos;
         bl_vector_t normal;
         bl_color_t color;
     } vertex_t;
-    
+    /*
     typedef struct {
         uint32_t x;
         uint32_t y;
         uint32_t z;
         uint32_t w;
+    } window_vertex_t;
+    */
+    typedef struct {
+        float x;
+        float y;
+        float z;
+        float w;
     } window_vertex_t;
     
     bl_fragment_chunk_t* chunk;
@@ -874,6 +910,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
 
     bl_vector_t clip[3];
     bl_vector_t ndc[3];
+    bl_vector_t normal[3];
     
     bl_vector_t wl;
     
@@ -884,6 +921,8 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     
     window_vertex_t wv[3];
     
+    float rz[3];
+    
     // precompute modelview and projection matrix
     bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
@@ -891,6 +930,8 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         bl_vector_mult(&clip[0],&source[start+n].pos,&matrix);
         bl_vector_mult(&clip[1],&source[start+n+1].pos,&matrix);
         bl_vector_mult(&clip[2],&source[start+n+2].pos,&matrix);
+        
+        bl_vector_mult(&normal[0],&source[start+n].normal,&matrix);
         
         float w;
         
@@ -923,56 +964,95 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
             wv[i].z=(ndc[i].z*wl.z)+wl.z;
         }
         
-        int32_t xmin = min_u32(wv[0].x,wv[1].x);
-        xmin = min_u32(xmin,wv[2].x);
+        float xmin = min_f32(wv[0].x,wv[1].x);
+        xmin = min_f32(xmin,wv[2].x);
         
-        if (xmin>=raster->screen_width) {
+        if (xmin>raster->screen_width) {
             continue;
         }
         
-        int32_t xmax = max_u32(wv[0].x,wv[1].x);
-        xmax = max_u32(xmax,wv[2].x);
+        float xmax = max_f32(wv[0].x,wv[1].x);
+        xmax = max_f32(xmax,wv[2].x);
         
         if (xmax<0) {
             continue;
         }
         
-        int32_t ymin = min_u32(wv[0].y,wv[1].y);
-        ymin = min_u32(ymin,wv[2].y);
+        float ymin = min_f32(wv[0].y,wv[1].y);
+        ymin = min_f32(ymin,wv[2].y);
         
         if (ymin>=raster->screen_height) {
             continue;
         }
         
-        int32_t ymax = max_u32(wv[0].y,wv[1].y);
-        ymax = max_u32(ymax,wv[2].y);
+        float ymax = max_f32(wv[0].y,wv[1].y);
+        ymax = max_f32(ymax,wv[2].y);
         
         if (ymax<0) {
             continue;
         }
         
-        xmin = max_u32(0,xmin);
-        xmax = min_u32(raster->screen_width,xmax);
+        xmin = max_f32(0,xmin);
+        xmax = min_f32(raster->screen_width,xmax);
         
-        ymin = max_u32(0,ymin);
-        ymax = min_u32(raster->screen_height,ymax);
+        ymin = max_f32(0,ymin);
+        ymax = min_f32(raster->screen_height,ymax);
         
         bl_fragment_t fragment;
         
-        int32_t q[4];
+        rz[0]=1.0f/ndc[0].z;
+        rz[1]=1.0f/ndc[1].z;
+        rz[2]=1.0f/ndc[2].z;
         
-        for (int32_t x=xmin;x!=xmax;x++) {
-            for (int32_t y=ymin;y!=ymax;y++) {
+        float q[4];
+        
+        float area = 1.0f/orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,wv[2].x,wv[2].y);
+        
+        float z;
+        
+        int32_t sx = xmin;
+        int32_t ex = xmax+1.0f;
+        int32_t sy = ymin;
+        int32_t ey = ymax+1.0f;
+        
+        for (int32_t x=sx;x!=ex;x++) {
+            for (int32_t y=sy;y!=ey;y++) {
                 
-                q[0]=orient(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
-                q[1]=orient(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
-                q[2]=orient(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
+                q[0]=orientf(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
+                q[1]=orientf(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
+                q[2]=orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
                 
-                if (q[0]>0 && q[1]>0 && q[2]>0) {
+                if (q[0]<=0 && q[1]<=0 && q[2]<=0) {
+                    
+                    float cosAlpha = bl_vector_dot(&normal[0],&light_pos);
+                    if (cosAlpha<0.0f) {
+                        cosAlpha=0.0f;
+                    }
+                    /*
+                    bl_color_t color = {0,0,0,0};
+                    bl_color_add(&color,&light_diffuse,&color);
+                    bl_color_scale(&color,cosAlpha);
+                    bl_color_add(&color,&light_ambient,&color);
+                    */
+                    //bl_color_t color = {cosAlpha,cosAlpha,cosAlpha,1.0f};
+                    bl_color_t color = light_diffuse;
+                    bl_color_scale(&color,cosAlpha);
+                    bl_color_add(&color,&light_ambient,&color);
+                    bl_color_clamp(&color);
+                    
                     fragment.x=x;
                     fragment.y=y;
-                    fragment.pixel=palette[(n/3)%6];
-                    fragment.depth=wv[0].z;
+                    //fragment.pixel=palette[(n/3)%6];
+                    fragment.pixel=bl_color_get_pixel(&color).value;
+                    q[0]=q[0]*area;
+                    q[1]=q[1]*area;
+                    q[2]=q[2]*area;
+                    
+                    z = rz[0]*q[0] + rz[1]*q[1] + rz[2]*q[2];
+                    z=1.0f/z;
+                    
+                    fragment.depth=(z*wl.z)+wl.z;
+                    //fragment.pixel=(fragment.depth/256)<<8;
                     
                     bl_raster_put_fragment(raster,&chunk,&fragment);
                 }
