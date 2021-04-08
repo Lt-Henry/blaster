@@ -26,6 +26,7 @@
 #include <blaster/time.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -546,7 +547,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     bl_command_t* cmd;
     
     int nv=1;
-    size_t block=4096*8;
+    size_t block=4096*2;
     size_t count;
     
     size_t start=0;
@@ -944,19 +945,39 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
             ndc[i].w=clip[i].w*w;
         }
         
-        //tessellation
-        //TODO: do it right
-        int out=0;
+        // full clip
+        int vout[3]={0,0,0};
         
         for (int i=0;i<3;i++) {
-            if (ndc[i].z<-1.0f || ndc[i].z>1.0f) {
-                out=1;
+            for (int j=0;j<3;j++) {
+                if (ndc[i].data[j]<=-1.0f) {
+                    vout[j]=vout[j] | (1<<i);
+                }
+                
+                if (ndc[i].data[j]>=1.0f) {
+                    vout[j]=vout[j] | (1<<(3+i));
+                }
             }
         }
         
-        if (out) {
+        
+        // z clip, for now, only passing triangles fully inside the clip space
+        if (vout[2]!=0) {
             continue;
         }
+        
+        // all x are either left or right from clip space
+        if (vout[0]==7 || vout[0]==56) {
+            continue;
+        }
+        
+        // all y are either left or right from clip space
+        if (vout[1]==7 || vout[1]==56) {
+            continue;
+        }
+        
+        //tessellation
+        //TODO: do it right
         
         for (int i=0;i<3;i++) {
             wv[i].x=(ndc[i].x*wl.x)+wl.x;
@@ -966,32 +987,33 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         
         float xmin = min_f32(wv[0].x,wv[1].x);
         xmin = min_f32(xmin,wv[2].x);
-        
+        /*
         if (xmin>raster->screen_width) {
+            printf("vout %d %d %d\n",vout[0],vout[1],vout[2]);
             continue;
         }
-        
+        */
         float xmax = max_f32(wv[0].x,wv[1].x);
         xmax = max_f32(xmax,wv[2].x);
-        
+        /*
         if (xmax<0) {
             continue;
         }
-        
+        */
         float ymin = min_f32(wv[0].y,wv[1].y);
         ymin = min_f32(ymin,wv[2].y);
-        
+        /*
         if (ymin>=raster->screen_height) {
             continue;
         }
-        
+        */
         float ymax = max_f32(wv[0].y,wv[1].y);
         ymax = max_f32(ymax,wv[2].y);
-        
+        /*
         if (ymax<0) {
             continue;
         }
-        
+        */
         xmin = max_f32(0,xmin);
         xmax = min_f32(raster->screen_width,xmax);
         
@@ -999,12 +1021,16 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         ymax = min_f32(raster->screen_height,ymax);
         
         bl_fragment_t fragment;
-        
+        /*
         rz[0]=1.0f/ndc[0].z;
         rz[1]=1.0f/ndc[1].z;
         rz[2]=1.0f/ndc[2].z;
+        */
+        rz[0]=rcp(ndc[0].z);
+        rz[1]=rcp(ndc[1].z);
+        rz[2]=rcp(ndc[2].z);
         
-        float q[4];
+        float lambda[4];
         
         float area = 1.0f/orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,wv[2].x,wv[2].y);
         
@@ -1015,46 +1041,72 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         int32_t sy = ymin;
         int32_t ey = ymax+1.0f;
         
-        for (int32_t x=sx;x!=ex;x++) {
-            for (int32_t y=sy;y!=ey;y++) {
+        float cosAlpha = bl_vector_dot(&normal[0],&light_pos);
+        if (cosAlpha<0.0f) {
+            cosAlpha=0.0f;
+        }
+
+        bl_color_t color = light_diffuse;
+        bl_color_scale(&color,cosAlpha);
+        bl_color_add(&color,&light_ambient,&color);
+        bl_color_clamp(&color);
+        fragment.pixel=bl_color_get_pixel(&color).value;
+        
+        float A=area*(rz[1]-rz[0]);
+        float B=area*(rz[2]-rz[0]);
+        
+        int in;
+        
+        float a = (wv[2].x-wv[1].x);
+        float b = (wv[2].y-wv[1].y);
+        float c = (wv[0].x-wv[2].x);
+        float d = (wv[0].y-wv[2].y);
+        float e = (wv[1].x-wv[0].x);
+        float f = (wv[1].y-wv[0].y);
+        
+        float pl[4];
+        
+        for (int32_t y=sy;y!=ey;y++) {
+            in = false;
+            
+            pl[0] = a*(y-wv[1].y);
+            pl[1] = c*(y-wv[2].y);
+            pl[2] = e*(y-wv[0].y);
+            
+            for (int32_t x=sx;x!=ex;x++) {
+                /*
+                lambda[0]=orientf(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
+                lambda[1]=orientf(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
+                lambda[2]=orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
+                */
                 
-                q[0]=orientf(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
-                q[1]=orientf(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
-                q[2]=orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
+                lambda[0] = pl[0] - b*(x-wv[1].x);
+                lambda[1] = pl[1] - d*(x-wv[2].x);
+                lambda[2] = pl[2] - f*(x-wv[0].x);
                 
-                if (q[0]<=0 && q[1]<=0 && q[2]<=0) {
-                    
-                    float cosAlpha = bl_vector_dot(&normal[0],&light_pos);
-                    if (cosAlpha<0.0f) {
-                        cosAlpha=0.0f;
-                    }
-                    /*
-                    bl_color_t color = {0,0,0,0};
-                    bl_color_add(&color,&light_diffuse,&color);
-                    bl_color_scale(&color,cosAlpha);
-                    bl_color_add(&color,&light_ambient,&color);
-                    */
-                    //bl_color_t color = {cosAlpha,cosAlpha,cosAlpha,1.0f};
-                    bl_color_t color = light_diffuse;
-                    bl_color_scale(&color,cosAlpha);
-                    bl_color_add(&color,&light_ambient,&color);
-                    bl_color_clamp(&color);
-                    
+                if (lambda[0]<=0 && lambda[1]<=0 && lambda[2]<=0) {
+                    in = true;
                     fragment.x=x;
                     fragment.y=y;
-                    //fragment.pixel=palette[(n/3)%6];
-                    fragment.pixel=bl_color_get_pixel(&color).value;
-                    q[0]=q[0]*area;
-                    q[1]=q[1]*area;
-                    q[2]=q[2]*area;
-                    
-                    z = rz[0]*q[0] + rz[1]*q[1] + rz[2]*q[2];
-                    z=1.0f/z;
+                    //fragment.pixel=bl_color_get_pixel(&color).value;
+                    /*
+                    lambda[0]=lambda[0]*area;
+                    lambda[1]=lambda[1]*area;
+                    lambda[2]=lambda[2]*area;
+                    */
+                    //z = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
+                    z = rz[0]+lambda[1]*A + lambda[2]*B;
+                    //z=1.0f/z;
+                    z=rcp(z);
                     
                     fragment.depth=(z*wl.z)+wl.z;
-                    //fragment.pixel=(fragment.depth/256)<<8;
                     
                     bl_raster_put_fragment(raster,&chunk,&fragment);
+                }
+                else {
+                    if (in) {
+                        break;
+                    }
                 }
             }
         }

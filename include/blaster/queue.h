@@ -21,15 +21,10 @@
 #define BLASTER_QUEUE
 
 #ifdef __cplusplus
-typedef int atomic_int;
-typedef bool atomic_flag;
 extern "C" {
-#else
-#include <stdatomic.h>
 #endif
 
 #include <pthread.h>
-
 
 /*! async queue */
 typedef struct {
@@ -38,8 +33,10 @@ typedef struct {
     int capacity;
     int begin;
     int end;
-    atomic_int size;
-    atomic_flag lock;
+    int size;
+    pthread_mutex_t mutex;
+    pthread_cond_t full;
+    pthread_cond_t empty;
 } bl_queue_t;
 
 bl_queue_t* bl_queue_new(int size);

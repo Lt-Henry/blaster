@@ -37,35 +37,38 @@ bl_queue_t* bl_queue_new(int size)
     queue->begin = 1;
     queue->end = 0;
     
-    atomic_flag_clear(&queue->lock);
+    pthread_mutex_init(&queue->mutex,NULL);
+    pthread_cond_init(&queue->full,NULL);
+    pthread_cond_init(&queue->empty,NULL);
     
     return queue;
 }
 
 void bl_queue_delete(bl_queue_t* queue)
 {
+    pthread_cond_destroy(&queue->full);
+    pthread_cond_destroy(&queue->empty);
+    pthread_mutex_destroy(&queue->mutex);
+    
     free(queue->data);
     free(queue);
 }
 
 void bl_queue_push(bl_queue_t* queue,void* value)
 {
-    loop:
+
+    pthread_mutex_lock(&queue->mutex);
     
-    while (atomic_flag_test_and_set(&queue->lock)) {
-    }
-    
-    if (queue->size>=queue->capacity) {
-        atomic_flag_clear(&queue->lock);
-        usleep(250);
-        goto loop;
+    while (queue->size >= queue->capacity) {
+        pthread_cond_wait(&queue->full,&queue->mutex);
     }
     
     queue->size++;
     queue->end=(queue->end+1)%queue->capacity;
     queue->data[queue->end]=value;
     
-    atomic_flag_clear(&queue->lock);
+    pthread_mutex_unlock(&queue->mutex);
+    pthread_cond_signal(&queue->empty);
     
 }
 
@@ -73,15 +76,10 @@ void* bl_queue_pop(bl_queue_t* queue)
 {
     void* value;
     
-    loop:
+    pthread_mutex_lock(&queue->mutex);
     
-    while (atomic_flag_test_and_set(&queue->lock)) {
-    }
-    
-    if (queue->size<=0) {
-        atomic_flag_clear(&queue->lock);
-        usleep(250);
-        goto loop;
+    while (queue->size==0) {
+        pthread_cond_wait(&queue->empty,&queue->mutex);
     }
     
     queue->size--;
@@ -89,30 +87,40 @@ void* bl_queue_pop(bl_queue_t* queue)
     value=queue->data[queue->begin];
     queue->begin=(queue->begin+1)%queue->capacity;
     
-    atomic_flag_clear(&queue->lock);
+    pthread_mutex_unlock(&queue->mutex);
+    
+    pthread_cond_signal(&queue->full);
     
     return value;
 }
 
 void bl_queue_clear(bl_queue_t* queue)
 {
-    while (atomic_flag_test_and_set(&queue->lock)) {
-    }
+    pthread_mutex_lock(&queue->mutex);
     
     queue->size=0;
     queue->begin=1;
     queue->end=0;
     
-    atomic_flag_clear(&queue->lock);
+    pthread_mutex_unlock(&queue->mutex);
     
 }
 
 int bl_queue_is_empty(bl_queue_t* queue)
 {
-    return (queue->size<=0);
+    pthread_mutex_lock(&queue->mutex);
+    int ret = (queue->size<=0);
+    pthread_mutex_unlock(&queue->mutex);
+    
+    return ret;
 }
 
 int bl_queue_is_full(bl_queue_t* queue)
 {
-    return (queue->size==queue->capacity);
+    
+    pthread_mutex_lock(&queue->mutex);
+    int ret = (queue->size==queue->capacity);
+    pthread_mutex_unlock(&queue->mutex);
+    
+    return ret;
 }
