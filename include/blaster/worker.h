@@ -36,8 +36,15 @@ typedef struct {
     uint8_t type;
     pthread_t thread;
     
-    uint64_t wait_time;
-    uint64_t working_time;
+    void* args;
+    
+    struct {
+        uint64_t wait;
+        uint64_t work;
+        uint64_t start;
+        uint64_t last;
+    } time;
+    
 } bl_worker_t;
 
 bl_worker_t* bl_worker_new(uint8_t type,uint32_t flags);

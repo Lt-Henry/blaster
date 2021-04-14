@@ -67,8 +67,8 @@ void bl_queue_push(bl_queue_t* queue,void* value)
     queue->end=(queue->end+1)%queue->capacity;
     queue->data[queue->end]=value;
     
-    pthread_mutex_unlock(&queue->mutex);
     pthread_cond_signal(&queue->empty);
+    pthread_mutex_unlock(&queue->mutex);
     
 }
 
@@ -87,9 +87,9 @@ void* bl_queue_pop(bl_queue_t* queue)
     value=queue->data[queue->begin];
     queue->begin=(queue->begin+1)%queue->capacity;
     
-    pthread_mutex_unlock(&queue->mutex);
-    
     pthread_cond_signal(&queue->full);
+    
+    pthread_mutex_unlock(&queue->mutex);
     
     return value;
 }

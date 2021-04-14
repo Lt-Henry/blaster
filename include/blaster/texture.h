@@ -64,6 +64,8 @@ void bl_texture_set_pixel(bl_texture_t* t,int x,int y,bl_pixel_t pixel);
 */
 bl_pixel_t bl_texture_get_pixel(bl_texture_t* t,int x,int y);
 
+uint16_t bl_texture_get_depth(bl_texture_t* t,int x,int y);
+
 #ifdef __cplusplus
 }
 #endif

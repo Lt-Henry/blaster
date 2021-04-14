@@ -27,6 +27,8 @@ bl_worker_t* bl_worker_new(uint8_t type,uint32_t flags)
     
     worker = malloc(sizeof(bl_worker_t));
     worker->type=type;
+    worker->time.wait=0;
+    worker->time.work=0;
     
     //pthread_create(&worker->thread,NULL,bl_worker_draw,worker);
     return worker;
@@ -34,7 +36,8 @@ bl_worker_t* bl_worker_new(uint8_t type,uint32_t flags)
 
 void bl_worker_start(bl_worker_t* worker,void *(*func) (void *),void* args)
 {
-    pthread_create(&worker->thread,NULL,func,args);
+    worker->args=args;
+    pthread_create(&worker->thread,NULL,func,worker);
 }
 
 void bl_worker_delete(bl_worker_t* worker)

@@ -33,7 +33,7 @@ extern "C" {
 #include "worker.h"
 
 #define BL_MAX_CHUNKS       128
-#define BL_MAX_FRAGMENTS    32767
+#define BL_MAX_FRAGMENTS    4096
 #define BL_MAX_COMMANDS     128
 
 typedef struct bl_fragment_u {
@@ -121,6 +121,9 @@ typedef struct {
     int update_workers;
     
     bl_worker_t** workers;
+    
+    uint64_t start;
+    uint64_t main;
     
 } bl_raster_t;
 

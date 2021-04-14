@@ -202,16 +202,31 @@ void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk)
 /*!
     Draw thread
 */
-void* draw_worker(void* arg)
+void* draw_worker(void* args)
 {
-    bl_raster_t* raster = (bl_raster_t*)arg;
+    bl_worker_t* worker = (bl_worker_t*)args;
+    bl_raster_t* raster = (bl_raster_t*)worker->args;
 
     printf("Draw worker started!\n");
+    
+    uint64_t t1,t2,t3;
     
     while (1) {
         bl_command_t* cmd;
         
+        t1=bl_time_us();
         cmd=bl_queue_pop(raster->queue_draw_commands);
+        t2=bl_time_us();
+        
+        if (worker->time.start==0) {
+            worker->time.start=t2;
+            worker->time.wait=0;
+            worker->time.work=0;
+            worker->time.last=0;
+        }
+        if (worker->time.last!=0) {
+            worker->time.wait+=t2-t1;
+        }
         
         if (cmd==NULL) {
             break;
@@ -242,6 +257,10 @@ void* draw_worker(void* arg)
         
         bl_queue_push(raster->queue_free_draw_commands,cmd);
         //printf("draw cmd done\n");
+        t3=bl_time_us();
+        worker->time.work+=t3-t2;
+
+        worker->time.last=t3;
     }
     
     printf("Draw worker is done\n");
@@ -252,25 +271,33 @@ void* draw_worker(void* arg)
 /*!
     Update thread
 */
-void* update_worker(void* arg)
+void* update_worker(void* args)
 {
-    bl_raster_t* raster = (bl_raster_t*)arg;
+    bl_worker_t* worker = (bl_worker_t*)args;
+    bl_raster_t* raster = (bl_raster_t*)worker->args;
+
 
     printf("Update worker started!\n");
     
-    
-    size_t fragments=0;
     uint64_t t1,t2,t3;
-    uint64_t delta;
-    int frames=0;
-    int commands=0;
-    
-    uint64_t cltime = bl_time_us();
     
     while (1) {
         bl_command_t* cmd;
         
+        t1=bl_time_us();
         cmd=bl_queue_pop(raster->queue_update_commands);
+        t2=bl_time_us();
+        
+        if (worker->time.start==0) {
+            worker->time.start=t2;
+            worker->time.wait=0;
+            worker->time.work=0;
+            worker->time.last=0;
+        }
+        
+        if (worker->time.last!=0) {
+            worker->time.wait+=t2-t1;
+        }
         
         if (cmd==NULL) {
             break;
@@ -281,43 +308,21 @@ void* update_worker(void* arg)
         
             case BL_CMD_CLEAR:
                 
-                t3=bl_time_us();
-                frames++;
-                
-                if ((t3-cltime) > 1000000) {
-                    
-                    //printf("* wait time: %d\n",cltime-delta);
-                    printf("* idle time: %d ms\n",delta/1000);
-                    printf("* idle time per frame: %d ms\n",delta/1000/frames);
-                    printf("* chunks per second: %d\n",commands);
-                    printf("* chunks per frame: %d\n",commands/frames);
-                    printf("* fragments per second: %d\n",fragments);
-                    printf("* fillrate: %d MB/s\n",(fragments*sizeof(bl_fragment_t))/(1024*1024));
-                    fragments=0;
-                    delta=0;
-                    cltime = t3;
-                    frames=0;
-                    commands=0;
-                }
-                
                 bl_raster_clear_buffers(raster);
                 bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
             
             case BL_CMD_UPDATE:
-                commands++;
-                fragments+=cmd->update.chunk->count;
-                t1=bl_time_us();
                 bl_raster_update_chunk(raster,cmd->update.chunk);
-                t2=bl_time_us();
-                delta+=(t2-t1);
-                
                 bl_queue_push(raster->queue_free_chunks,cmd->update.chunk);
                 bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
             
         }
         
+        t3=bl_time_us();
+        worker->time.work+=t3-t2;
+        worker->time.last=t3;
         //printf("update cmd done\n");
     }
     
@@ -381,7 +386,7 @@ bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_work
         raster->workers[w]=bl_worker_new(BL_WORKER_UPDATE,0);
         bl_worker_start(raster->workers[w],update_worker,raster);
     }
-
+    
     return raster;
 }
 
@@ -435,6 +440,10 @@ void bl_raster_set_clear_color(bl_raster_t* raster,bl_color_t* color)
 
 void bl_raster_clear(bl_raster_t* raster)
 {
+    for (size_t n=0;n<raster->draw_workers+raster->update_workers;n++) {
+        raster->workers[n]->time.start=0;
+    }
+    
     bl_command_t* cmd;
     
     //printf("clear buffers...\n");
@@ -547,7 +556,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     bl_command_t* cmd;
     
     int nv=1;
-    size_t block=4096*2;
+    size_t block=1024;
     size_t count;
     
     size_t start=0;
@@ -568,6 +577,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     size_t num=0;
     
     while (start<count) {
+        
         cmd = bl_queue_pop(raster->queue_free_draw_commands);
         
         num=(start*nv)+(block*nv);
@@ -581,7 +591,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
         cmd->draw.count=num;
         //printf("pushing a draw job [%ld,%ld]\n",start*nv,num);
         bl_queue_push(raster->queue_draw_commands,cmd);
-    
+        
         start+=block;
     }
 }
@@ -876,10 +886,14 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         0x0aaaa0ff
     };
     
-    bl_vector_t light_pos = {0.0f,0.0f,-1.0f,0.0f};
+    bl_vector_t light_pos = {0.0f,1.0f,-1.0f,0.0f};
     bl_color_t light_ambient = {0.5f,0.5f,0.5f,1.0f};
-    bl_color_t light_diffuse = {1.0f,1.0f,1.0f,1.0f};
+    bl_color_t light_diffuse = {0.5f,0.5f,0.5f,1.0f};
     
+    bl_color_t base_color [4] = {{0.5f,0.0f,0.5f,1.0f},
+                                {0.5f,0.5f,0.0f,1.0f},
+                                {0.0f,0.5f,0.5f,1.0f},
+                                {0.0f,0.0f,0.5f,1.0f}};
     typedef struct {
         bl_vector_t pos;
         bl_vector_t normal;
@@ -912,6 +926,9 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     bl_vector_t clip[3];
     bl_vector_t ndc[3];
     bl_vector_t normal[3];
+    bl_vector_t face_normal;
+    bl_vector_t ab;
+    bl_vector_t ac;
     
     bl_vector_t wl;
     
@@ -932,7 +949,12 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         bl_vector_mult(&clip[1],&source[start+n+1].pos,&matrix);
         bl_vector_mult(&clip[2],&source[start+n+2].pos,&matrix);
         
-        bl_vector_mult(&normal[0],&source[start+n].normal,&matrix);
+        //bl_vector_mult(&normal[0],&source[start+n].normal,&matrix);
+        bl_vector_sub(&ab,&source[start+n+1].pos,&source[start+n].pos);
+        bl_vector_sub(&ac,&source[start+n+2].pos,&source[start+n].pos);
+        bl_vector_cross(&face_normal,&ab,&ac);
+        bl_vector_mult(&face_normal,&face_normal,&matrix);
+        bl_vector_normalize(&face_normal);
         
         float w;
         
@@ -959,7 +981,6 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                 }
             }
         }
-        
         
         // z clip, for now, only passing triangles fully inside the clip space
         if (vout[2]!=0) {
@@ -1041,19 +1062,26 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         int32_t sy = ymin;
         int32_t ey = ymax+1.0f;
         
-        float cosAlpha = bl_vector_dot(&normal[0],&light_pos);
+        float cosAlpha = bl_vector_dot(&face_normal,&light_pos);
+        cosAlpha=fabs(cosAlpha);
+        
         if (cosAlpha<0.0f) {
             cosAlpha=0.0f;
         }
 
-        bl_color_t color = light_diffuse;
+        //bl_color_t color = light_diffuse;
+        bl_color_t color = base_color[n%4];
         bl_color_scale(&color,cosAlpha);
         bl_color_add(&color,&light_ambient,&color);
         bl_color_clamp(&color);
         fragment.pixel=bl_color_get_pixel(&color).value;
-        
+        /*
         float A=area*(rz[1]-rz[0]);
         float B=area*(rz[2]-rz[0]);
+        */
+        
+        float A=area*(ndc[1].z-ndc[0].z);
+        float B=area*(ndc[2].z-ndc[0].z);
         
         int in;
         
@@ -1095,11 +1123,17 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                     lambda[2]=lambda[2]*area;
                     */
                     //z = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
-                    z = rz[0]+lambda[1]*A + lambda[2]*B;
-                    //z=1.0f/z;
-                    z=rcp(z);
+                   //z = rz[0]+lambda[1]*A + lambda[2]*B;
+                    //z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
+                    
+                    z = ndc[0].z+lambda[1]*A + lambda[2]*B;
                     
                     fragment.depth=(z*wl.z)+wl.z;
+                    
+                    //bl_color_t dc;
+                    //bl_color_set(&dc,(z*0.5f)+1.0f,(z*0.5f)+1.0f,(z*0.5f)+1.0f,1.0f);
+                    //fragment.pixel=bl_color_get_pixel(&dc).value;
+                    
                     
                     bl_raster_put_fragment(raster,&chunk,&fragment);
                 }

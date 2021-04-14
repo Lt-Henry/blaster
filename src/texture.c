@@ -90,3 +90,9 @@ bl_pixel_t bl_texture_get_pixel(bl_texture_t* t,int x,int y)
     uint32_t* ptr=t->data;
     return (bl_pixel_t)ptr[x+y*t->width];
 }
+
+uint16_t bl_texture_get_depth(bl_texture_t* t,int x,int y)
+{
+    uint16_t* ptr=t->data;
+    return (uint16_t)ptr[x+y*t->width];
+}
