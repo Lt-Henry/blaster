@@ -40,8 +40,10 @@ typedef struct bl_fragment_u {
     int16_t x;
     int16_t y;
     uint16_t depth;
+    uint16_t padding0;
+    
     uint32_t pixel;
-    //uint16_t padding[9];
+    
 } bl_fragment_t;
 
 typedef struct bl_fragment_chunk_u {
@@ -104,6 +106,7 @@ typedef struct {
     /*! color used for clear */
     bl_color_t clear_color;
     
+    bl_texture_t* texture;
     
     bl_fragment_chunk_t chunks[BL_MAX_CHUNKS];
     bl_queue_t* queue_free_chunks;
@@ -181,6 +184,8 @@ int bl_raster_get_height(bl_raster_t* raster);
     Draws a vertex buffer (user-side function)
 */
 void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type);
+
+void bl_raster_set_texture(bl_raster_t* raster,bl_texture_t* texture);
 
 #ifdef __cplusplus
 }

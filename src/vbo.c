@@ -35,6 +35,7 @@ bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size)
     vbo->vertex_size=vertex_size;
     
     uint8_t* p = malloc(size*vertex_size);
+    //uint8_t* p = aligned_alloc(64,size*vertex_size);
     
     vbo->data=p;
     

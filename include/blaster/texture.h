@@ -28,6 +28,16 @@ extern "C" {
 
 #include <stdint.h>
 
+typedef union {
+    float data[2];
+    
+    struct {
+        float u;
+        float v;
+    };
+    
+} bl_uv_t;
+
 typedef struct {
 
     int width; /*! width in pixels */
@@ -65,6 +75,8 @@ void bl_texture_set_pixel(bl_texture_t* t,int x,int y,bl_pixel_t pixel);
 bl_pixel_t bl_texture_get_pixel(bl_texture_t* t,int x,int y);
 
 uint16_t bl_texture_get_depth(bl_texture_t* t,int x,int y);
+
+bl_pixel_t bl_texture_get_texel(bl_texture_t*t, float u,float v);
 
 #ifdef __cplusplus
 }

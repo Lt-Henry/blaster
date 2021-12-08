@@ -596,6 +596,11 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     }
 }
 
+void bl_raster_set_texture(bl_raster_t* raster,bl_texture_t* texture)
+{
+    raster->texture=texture;
+}
+
 void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t count)
 {
 
@@ -1066,6 +1071,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         cosAlpha=fabs(cosAlpha);
         
         if (cosAlpha<0.0f) {
+            //TODO: Culling?
             cosAlpha=0.0f;
         }
 
@@ -1112,7 +1118,7 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                 lambda[1] = pl[1] - d*(x-wv[2].x);
                 lambda[2] = pl[2] - f*(x-wv[0].x);
                 
-                if (lambda[0]<=0 && lambda[1]<=0 && lambda[2]<=0) {
+                if (lambda[0]<0 && lambda[1]<0 && lambda[2]<0) {
                     in = true;
                     fragment.x=x;
                     fragment.y=y;

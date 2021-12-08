@@ -18,19 +18,39 @@
 */
 
 #include <blaster/tga.h>
+#include <blaster/constants.h>
+
 #include <stdio.h>
 #include <stdint.h>
 
 bl_texture_t* bl_tga_load(const char* filename)
 {
-    //ToDo
-    return NULL;
+    bl_texture_t* texture;
+    
+    FILE* file;
+    
+    file = fopen(filename,"rb");
+    
+    bl_tga_header_t header;
+    fread(&header,sizeof(bl_tga_header_t),1,file);
+    printf("tga type:%d\n",header.image_type);
+    printf("tga size:%dx%d\n",header.width,header.height);
+    printf("tga bpp:%d\n",header.bpp);
+    
+    size_t bitmap_size = header.width*header.height*(header.bpp/8);
+    printf("tga data size:%d\n",bitmap_size);
+    
+    uint8_t* data=malloc(bitmap_size);
+    fread(data,bitmap_size,1,file);
+    texture = bl_texture_new_from_data(header.width,header.height,BL_TEXTURE_U32,data);
+    free(data);
+    fclose(file);
+    
+    return texture;
 }
 
 void bl_tga_save(bl_texture_t* texture, const char* filename)
 {
-
-
 
     FILE* file;
     

@@ -96,3 +96,15 @@ uint16_t bl_texture_get_depth(bl_texture_t* t,int x,int y)
     uint16_t* ptr=t->data;
     return (uint16_t)ptr[x+y*t->width];
 }
+
+bl_pixel_t bl_texture_get_texel(bl_texture_t* t, float u,float v)
+{
+    int x = t->width*u;
+    int y = t->height*v;
+    
+    x=x%t->width;
+    y=y%t->height;
+    
+    uint32_t* ptr=t->data;
+    return (bl_pixel_t)ptr[x+y*t->width];
+}
