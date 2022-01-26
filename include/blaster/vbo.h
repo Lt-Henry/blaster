@@ -33,7 +33,7 @@ typedef struct {
     /*! number of vertices */
     size_t size;
 
-    /*! size in bytes of each vertex (coord,color,normal,...) */
+    /*! number of elements per vertex (coord,color,normal,...) */
     size_t vertex_size;
     
     /*! pointer to vbo data */
@@ -55,12 +55,14 @@ void bl_vbo_delete(bl_vbo_t* vbo);
     Reconfigure vbo for a new vertex size. No reallocation is done.
     \return The new number of vertices vbo can hold
 */
-size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size);
+//size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size);
 
 /*!
     Sets a vertex with all it's attributes
 */
-int bl_vbo_set(bl_vbo_t* vbo,int index,void* value);
+int bl_vbo_set(bl_vbo_t* vbo,int vertex,int index,float value);
+
+int bl_vbo_set_v(bl_vbo_t* vbo,int vertex,void* value);
 
 #ifdef __cplusplus
 }

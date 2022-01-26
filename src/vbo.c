@@ -34,8 +34,7 @@ bl_vbo_t* bl_vbo_new(size_t size,size_t vertex_size)
     vbo->size=size;
     vbo->vertex_size=vertex_size;
     
-    uint8_t* p = malloc(size*vertex_size);
-    //uint8_t* p = aligned_alloc(64,size*vertex_size);
+    uint8_t* p = malloc(size*vertex_size*sizeof(float));
     
     vbo->data=p;
     
@@ -47,7 +46,7 @@ void bl_vbo_delete(bl_vbo_t* vbo)
     free(vbo->data);
     free(vbo);
 }
-
+/*
 size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size)
 {
     size_t new_size;
@@ -60,19 +59,32 @@ size_t bl_vbo_reconfigure(bl_vbo_t* vbo,size_t vertex_size)
     
     return new_size;
 }
-
-int bl_vbo_set(bl_vbo_t* vbo,int index,void* value)
+*/
+int bl_vbo_set(bl_vbo_t* vbo,int vertex,int index,float value)
 {
 
-    if (index>=vbo->size) {
+    if (vertex>=vbo->size || index>=vbo->vertex_size) {
         return BL_INDEX_ERROR;
     }
     
-    uint8_t* dest = (uint8_t*)vbo->data;
+    float* dest = (float*)vbo->data;
     
-    dest+=vbo->vertex_size*index;
+    dest+=vertex*vbo->vertex_size;
+    dest[index]=value;
     
-    memcpy(dest,value,vbo->vertex_size);
+    return BL_OK;
+}
+
+int bl_vbo_set_v(bl_vbo_t* vbo,int vertex,void* value)
+{
+    if (vertex>=vbo->size) {
+        return BL_INDEX_ERROR;
+    }
+    
+    float* dest = (float*)vbo->data;
+    
+    dest+=vertex*vbo->vertex_size;
+    memcpy(dest,value,vbo->vertex_size*sizeof(float));
     
     return BL_OK;
 }

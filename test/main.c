@@ -139,7 +139,7 @@ int main(int argc,char* argv[])
         bl_color_t color;
     } vertex;
     
-    bl_vbo_t* points = bl_vbo_new(1000,sizeof(vertex));
+    bl_vbo_t* points = bl_vbo_new(1000,8);
     
     double alpha=0.0;
     float step=0.0f;
@@ -157,7 +157,7 @@ int main(int argc,char* argv[])
         alpha+=0.1;
         step+=0.1f;
         
-        bl_vbo_set(points,n,&vertex);
+        bl_vbo_set_v(points,n,&vertex);
     }
     
     
