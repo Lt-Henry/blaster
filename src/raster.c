@@ -60,6 +60,11 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo, size_t start,s
 */
 void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk);
 
+/*!
+    default shader
+*/
+void bl_raster_basic_vertex_shader(bl_shader_t* shader, size_t index, size_t n, bl_matrix_t* mproj,bl_vector_t* position);
+void bl_raster_basic_fragment_shader(bl_vbo_t* vbo,int index, float* data, bl_fragment_t* fragment);
 
 static uint32_t max_u32(uint32_t a,uint32_t b)
 {
@@ -882,6 +887,9 @@ static float orientf(float x0, float y0, float x1,float y1, float x2, float y2)
 
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
+    bl_shader_t shader;
+    shader.vbo = vbo;
+    
     const uint32_t palette[] = {
         0xaa0000ff,
         0x00aa00ff,
@@ -945,22 +953,26 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     window_vertex_t wv[3];
     
     float rz[3];
+    float rvalues[48];
+    float values[12];
     
     // precompute modelview and projection matrix
     bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
     for (size_t n=0;n<count;n+=3) {
-        bl_vector_mult(&clip[0],&source[start+n].pos,&matrix);
-        bl_vector_mult(&clip[1],&source[start+n+1].pos,&matrix);
-        bl_vector_mult(&clip[2],&source[start+n+2].pos,&matrix);
         
+        for (size_t v=0;v<3;v++) {
+            bl_raster_basic_vertex_shader(&shader,start+n+v,v,&matrix,&clip[v]);
+        }
+    
         //bl_vector_mult(&normal[0],&source[start+n].normal,&matrix);
+        /*
         bl_vector_sub(&ab,&source[start+n+1].pos,&source[start+n].pos);
         bl_vector_sub(&ac,&source[start+n+2].pos,&source[start+n].pos);
         bl_vector_cross(&face_normal,&ab,&ac);
         bl_vector_mult(&face_normal,&face_normal,&matrix);
         bl_vector_normalize(&face_normal);
-        
+        */
         float w;
         
         for (int i=0;i<3;i++) {
@@ -1056,6 +1068,13 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         rz[1]=rcp(ndc[1].z);
         rz[2]=rcp(ndc[2].z);
         
+        for (size_t v=0;v<3;v++) {
+            float* tmp = bl_vbo_get(vbo,start+n+v);
+            for (size_t w=4;w<vbo->vertex_size;w++) {
+                rvalues[(vbo->vertex_size*v)+w] = tmp[w]/ndc[v].z;
+            }
+        }
+        
         float lambda[4];
         
         float area = 1.0f/orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,wv[2].x,wv[2].y);
@@ -1130,16 +1149,20 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                     */
                     //z = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
                    //z = rz[0]+lambda[1]*A + lambda[2]*B;
-                    //z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
+                    z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
                     
-                    z = ndc[0].z+lambda[1]*A + lambda[2]*B;
+                    //z = ndc[0].z+lambda[1]*A + lambda[2]*B;
                     
                     fragment.depth=(z*wl.z)+wl.z;
+                    
+                    for (size_t w=4;w<vbo->vertex_size;w++) {
+                        size_t q = vbo->vertex_size;
+                        values[w] = rvalues[q+w]*lambda[0] + rvalues[(q*2)+w]*lambda[1] + rvalues[(q*3)+w]*lambda[2];
+                    }
                     
                     //bl_color_t dc;
                     //bl_color_set(&dc,(z*0.5f)+1.0f,(z*0.5f)+1.0f,(z*0.5f)+1.0f,1.0f);
                     //fragment.pixel=bl_color_get_pixel(&dc).value;
-                    
                     
                     bl_raster_put_fragment(raster,&chunk,&fragment);
                 }
@@ -1153,4 +1176,15 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     }
     
     bl_raster_commit_chunk(raster,&chunk);
+}
+
+void bl_raster_basic_vertex_shader(bl_shader_t* shader, size_t index, size_t n, bl_matrix_t* mproj, bl_vector_t* position)
+{
+    bl_vector_t* vertex = bl_vbo_get(shader->vbo,index);
+    bl_vector_mult(position,vertex,mproj);
+}
+
+void bl_raster_basic_fragment_shader(bl_vbo_t* vbo,int index, float* data, bl_fragment_t* fragment)
+{
+    
 }

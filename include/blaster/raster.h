@@ -80,6 +80,11 @@ typedef struct bl_command_u {
     
 } bl_command_t;
 
+typedef struct bl_shader_u {
+    float data[16];
+    bl_vbo_t* vbo;
+} bl_shader_t;
+
 /*!
     Raster main structure
 */

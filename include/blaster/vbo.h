@@ -64,6 +64,8 @@ int bl_vbo_set(bl_vbo_t* vbo,int vertex,int index,float value);
 
 int bl_vbo_set_v(bl_vbo_t* vbo,int vertex,void* value);
 
+void* bl_vbo_get(bl_vbo_t* vbo,int vertex);
+
 #ifdef __cplusplus
 }
 #endif

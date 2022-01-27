@@ -88,3 +88,12 @@ int bl_vbo_set_v(bl_vbo_t* vbo,int vertex,void* value)
     
     return BL_OK;
 }
+
+void* bl_vbo_get(bl_vbo_t* vbo,int vertex)
+{
+    if (vertex>=vbo->size) {
+        return NULL;
+    }
+    
+    return vbo->data + (vertex * vbo->vertex_size * sizeof(float));
+}
