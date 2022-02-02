@@ -31,6 +31,7 @@ extern "C" {
 #include "vbo.h"
 #include "queue.h"
 #include "worker.h"
+#include "vector.h"
 
 #define BL_MAX_CHUNKS       128
 #define BL_MAX_FRAGMENTS    4096
@@ -80,11 +81,6 @@ typedef struct bl_command_u {
     
 } bl_command_t;
 
-typedef struct bl_shader_u {
-    float data[16];
-    bl_vbo_t* vbo;
-} bl_shader_t;
-
 /*!
     Raster main structure
 */
@@ -111,6 +107,8 @@ typedef struct {
     /*! color used for clear */
     bl_color_t clear_color;
     
+    uint8_t uniform[256];
+    
     bl_texture_t* texture;
     
     bl_fragment_chunk_t chunks[BL_MAX_CHUNKS];
@@ -134,6 +132,9 @@ typedef struct {
     uint64_t main;
     
 } bl_raster_t;
+
+typedef void (* bl_vertex_shader_t) (bl_raster_t*, size_t, uint8_t*, float*, float*, float*, bl_vector_t*);
+typedef void (* bl_fragment_shader_t) (bl_raster_t*,uint8_t*, float*, float*, float*, bl_fragment_t*);
 
 /*!
     Create a new raster

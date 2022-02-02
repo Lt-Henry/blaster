@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <math.h>
 
     /*
     Internal raster functions
@@ -63,8 +64,8 @@ void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk);
 /*!
     default shader
 */
-void bl_raster_basic_vertex_shader(bl_shader_t* shader, size_t index, size_t n, bl_matrix_t* mproj,bl_vector_t* position);
-void bl_raster_basic_fragment_shader(bl_vbo_t* vbo,int index, float* data, bl_fragment_t* fragment);
+void bl_raster_basic_vertex_shader(bl_raster_t* raster, size_t n, uint8_t* uniform, float* attributes, float* variying, float* flat, bl_vector_t* position);
+void bl_raster_basic_fragment_shader(bl_raster_t* raster,uint8_t* uniform, float* attributes, float* variying, float* flat, bl_fragment_t* fragment);
 
 static uint32_t max_u32(uint32_t a,uint32_t b)
 {
@@ -887,26 +888,11 @@ static float orientf(float x0, float y0, float x1,float y1, float x2, float y2)
 
 void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,size_t count)
 {
-    bl_shader_t shader;
-    shader.vbo = vbo;
+    float variying[48];
+    float mix[16];
+    float flat[16];
+    size_t var_count = 0;
     
-    const uint32_t palette[] = {
-        0xaa0000ff,
-        0x00aa00ff,
-        0x0000aaff,
-        0xaaaa00ff,
-        0x00aaaaff,
-        0x0aaaa0ff
-    };
-    
-    bl_vector_t light_pos = {0.0f,1.0f,-1.0f,0.0f};
-    bl_color_t light_ambient = {0.5f,0.5f,0.5f,1.0f};
-    bl_color_t light_diffuse = {0.5f,0.5f,0.5f,1.0f};
-    
-    bl_color_t base_color [4] = {{0.5f,0.0f,0.5f,1.0f},
-                                {0.5f,0.5f,0.0f,1.0f},
-                                {0.0f,0.5f,0.5f,1.0f},
-                                {0.0f,0.0f,0.5f,1.0f}};
     typedef struct {
         bl_vector_t pos;
         bl_vector_t normal;
@@ -957,12 +943,18 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     float values[12];
     
     // precompute modelview and projection matrix
-    bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
+    //bl_matrix_mult(&matrix,raster->projection->matrix,raster->modelview->matrix);
     
     for (size_t n=0;n<count;n+=3) {
         
         for (size_t v=0;v<3;v++) {
-            bl_raster_basic_vertex_shader(&shader,start+n+v,v,&matrix,&clip[v]);
+            //bl_raster_basic_vertex_shader(&shader,start+n+v,v,&matrix,&clip[v]);
+            bl_raster_basic_vertex_shader(raster,v,
+                                          raster->uniform,
+                                          bl_vbo_get(vbo,start+n+v),
+                                          variying + (16*v),
+                                          flat,
+                                          &clip[v]);
         }
     
         //bl_vector_mult(&normal[0],&source[start+n].normal,&matrix);
@@ -1067,14 +1059,14 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         rz[0]=rcp(ndc[0].z);
         rz[1]=rcp(ndc[1].z);
         rz[2]=rcp(ndc[2].z);
-        
+        /*
         for (size_t v=0;v<3;v++) {
             float* tmp = bl_vbo_get(vbo,start+n+v);
             for (size_t w=4;w<vbo->vertex_size;w++) {
                 rvalues[(vbo->vertex_size*v)+w] = tmp[w]/ndc[v].z;
             }
         }
-        
+        */
         float lambda[4];
         
         float area = 1.0f/orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,wv[2].x,wv[2].y);
@@ -1085,21 +1077,15 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         int32_t ex = xmax+1.0f;
         int32_t sy = ymin;
         int32_t ey = ymax+1.0f;
-        
-        float cosAlpha = bl_vector_dot(&face_normal,&light_pos);
-        cosAlpha=fabs(cosAlpha);
-        
-        if (cosAlpha<0.0f) {
-            //TODO: Culling?
-            cosAlpha=0.0f;
-        }
-
+     
         //bl_color_t color = light_diffuse;
+        /*
         bl_color_t color = base_color[n%4];
         bl_color_scale(&color,cosAlpha);
         bl_color_add(&color,&light_ambient,&color);
         bl_color_clamp(&color);
         fragment.pixel=bl_color_get_pixel(&color).value;
+        */
         /*
         float A=area*(rz[1]-rz[0]);
         float B=area*(rz[2]-rz[0]);
@@ -1127,26 +1113,26 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
             pl[2] = e*(y-wv[0].y);
             
             for (int32_t x=sx;x!=ex;x++) {
-                /*
+                
                 lambda[0]=orientf(wv[1].x,wv[1].y,wv[2].x,wv[2].y,x,y);
                 lambda[1]=orientf(wv[2].x,wv[2].y,wv[0].x,wv[0].y,x,y);
                 lambda[2]=orientf(wv[0].x,wv[0].y,wv[1].x,wv[1].y,x,y);
-                */
                 
+                /*
                 lambda[0] = pl[0] - b*(x-wv[1].x);
                 lambda[1] = pl[1] - d*(x-wv[2].x);
                 lambda[2] = pl[2] - f*(x-wv[0].x);
-                
+                */
                 if (lambda[0]<0 && lambda[1]<0 && lambda[2]<0) {
                     in = true;
                     fragment.x=x;
                     fragment.y=y;
                     //fragment.pixel=bl_color_get_pixel(&color).value;
-                    /*
+                    
                     lambda[0]=lambda[0]*area;
                     lambda[1]=lambda[1]*area;
                     lambda[2]=lambda[2]*area;
-                    */
+                    
                     //z = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
                    //z = rz[0]+lambda[1]*A + lambda[2]*B;
                     z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
@@ -1155,10 +1141,19 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                     
                     fragment.depth=(z*wl.z)+wl.z;
                     
+                    /*
                     for (size_t w=4;w<vbo->vertex_size;w++) {
                         size_t q = vbo->vertex_size;
                         values[w] = rvalues[q+w]*lambda[0] + rvalues[(q*2)+w]*lambda[1] + rvalues[(q*3)+w]*lambda[2];
                     }
+                    */
+                    
+                    bl_raster_basic_fragment_shader(raster,
+                                                    raster->uniform,
+                                                    NULL,
+                                                    mix,
+                                                    flat,
+                                                    &fragment);
                     
                     //bl_color_t dc;
                     //bl_color_set(&dc,(z*0.5f)+1.0f,(z*0.5f)+1.0f,(z*0.5f)+1.0f,1.0f);
@@ -1178,13 +1173,33 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
     bl_raster_commit_chunk(raster,&chunk);
 }
 
-void bl_raster_basic_vertex_shader(bl_shader_t* shader, size_t index, size_t n, bl_matrix_t* mproj, bl_vector_t* position)
+void bl_raster_basic_vertex_shader(bl_raster_t* raster, size_t n, uint8_t* uniform, float* attributes, float* variying, float* flat, bl_vector_t* position)
 {
-    bl_vector_t* vertex = bl_vbo_get(shader->vbo,index);
-    bl_vector_mult(position,vertex,mproj);
+    bl_matrix_t* matrix = (bl_matrix_t*) uniform;
+    bl_vector_t* vector = (bl_vector_t*) attributes;
+    
+    bl_vector_mult(position,&vector[0],&matrix[1]); //postion * mvp matrix
+    
+    if (n==0) {
+        bl_vector_t light_pos = {0.0f,1.0f,-1.0f,0.0f};
+        bl_color_t light_diffuse = {0.5f,0.5f,0.5f,1.0f};
+        
+        bl_vector_t normal;
+        bl_vector_mult(&normal,&vector[1],&matrix[0]); //normal * mv matrix
+        
+        float cosAlpha = bl_vector_dot(&normal,&light_pos);
+        cosAlpha=fabs(cosAlpha);
+        
+        bl_color_t* material = (bl_color_t*) flat;
+        bl_color_set(material,0.5f,0.5f,0.5f,1.0f);
+        
+        bl_color_scale(material,cosAlpha);
+        
+    }
 }
 
-void bl_raster_basic_fragment_shader(bl_vbo_t* vbo,int index, float* data, bl_fragment_t* fragment)
+void bl_raster_basic_fragment_shader(bl_raster_t* raster,uint8_t* uniform, float* attributes, float* variying, float* flat, bl_fragment_t* fragment)
 {
-    
+    bl_color_t* color = (bl_color_t*) flat;
+    fragment->pixel=bl_color_get_pixel(color).value;
 }
