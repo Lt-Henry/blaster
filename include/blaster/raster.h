@@ -133,8 +133,8 @@ typedef struct {
     
 } bl_raster_t;
 
-typedef void (* bl_vertex_shader_t) (bl_raster_t*, size_t, uint8_t*, float*, float*, float*, bl_vector_t*);
-typedef void (* bl_fragment_shader_t) (bl_raster_t*,uint8_t*, float*, float*, float*, bl_fragment_t*);
+typedef void (* bl_vertex_shader_t) (bl_raster_t*, size_t, float*, float*, float*, bl_vector_t*);
+typedef void (* bl_fragment_shader_t) (bl_raster_t*, float*, float*, float*, bl_fragment_t*);
 
 /*!
     Create a new raster
