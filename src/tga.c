@@ -25,7 +25,7 @@
 
 bl_texture_t* bl_tga_load(const char* filename)
 {
-    bl_texture_t* texture;
+    bl_texture_t* texture = NULL;
     
     FILE* file;
     
@@ -40,10 +40,106 @@ bl_texture_t* bl_tga_load(const char* filename)
     size_t bitmap_size = header.width*header.height*(header.bpp/8);
     printf("tga data size:%d\n",bitmap_size);
     
-    uint8_t* data=malloc(bitmap_size);
-    fread(data,bitmap_size,1,file);
-    texture = bl_texture_new_from_data(header.width,header.height,BL_TEXTURE_U32,data);
-    free(data);
+    switch (header.image_type) {
+        case  BL_TGA_TYPE_UNCOMPRESSED_RGB: {
+            uint8_t* data=malloc(bitmap_size);
+
+            for (int n=0;n<header.width*header.height;n++) {
+                uint8_t tmp[4];
+                fread(tmp,header.bpp/8,1,file);
+
+                data[0]=tmp[0];
+                data[1]=tmp[1];
+                data[2]=tmp[2];
+                data[3]=tmp[3];
+
+                data+=4;
+            }
+
+            texture = bl_texture_new_from_data(header.width,header.height,BL_TEXTURE_U32,data);
+            free(data);
+        }
+        break;
+
+        case BL_TGA_TYPE_RLE_RGB: {
+            uint8_t* data=malloc(bitmap_size);
+
+            size_t remain = bitmap_size;
+            int section = 0; //0 header, 1 rle value, 2 rle chunk, 3 raw chunk
+            int chunk;
+            uint8_t tmp[4];
+
+            while(remain>0) {
+                switch (section) {
+                    case 0:
+                        fread(&chunk,1,1,file);
+                        if (chunk<128) {
+                            section = 3;
+                            chunk = chunk + 1;
+                        }
+                        else {
+                            section = 1;
+                            chunk = chunk - 127;
+                        }
+                    break;
+
+                    case 1:
+                        fread(tmp,header.bpp/8,1,file);
+
+                        data[0]=tmp[0];
+                        data[1]=tmp[1];
+                        data[2]=tmp[2];
+                        data[3]=tmp[3];
+
+                        section = 2;
+                        data+=4;
+                        remain-=4;
+                        chunk--;
+
+                        if (chunk == 0) {
+                            section = 0;
+                        }
+                    break;
+
+                    case 2:
+                        data[0]=tmp[0];
+                        data[1]=tmp[1];
+                        data[2]=tmp[2];
+                        data[3]=tmp[3];
+
+                        data+=4;
+                        remain-=4;
+
+                        chunk--;
+                        if (chunk == 0) {
+                            section = 0;
+                        }
+                    break;
+
+                    case 3:
+                        fread(tmp,header.bpp/8,1,file);
+
+                        data[0]=tmp[0];
+                        data[1]=tmp[1];
+                        data[2]=tmp[2];
+                        data[3]=tmp[3];
+
+                        data+=4;
+                        remain-=4;
+
+                        chunk--;
+                        if (chunk == 0) {
+                            section = 0;
+                        }
+                    break;
+                }
+            }
+
+            free(data);
+        }
+        break;
+
+    }
     fclose(file);
     
     return texture;

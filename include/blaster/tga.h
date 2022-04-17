@@ -26,6 +26,11 @@ extern "C" {
 
 #include "texture.h"
 
+#define BL_TGA_TYPE_UNCOMPRESSED_COLOR_MAPPED    1
+#define BL_TGA_TYPE_UNCOMPRESSED_RGB    2
+#define BL_TGA_TYPE_RLE_COLOR_MAPPED    9
+#define BL_TGA_TYPE_RLE_RGB    10
+
 typedef struct __attribute__((__packed__)) {
     uint8_t id_size;
     uint8_t color_map_type;
