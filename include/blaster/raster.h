@@ -37,6 +37,12 @@ extern "C" {
 #define BL_MAX_FRAGMENTS    4096
 #define BL_MAX_COMMANDS     128
 
+typedef struct bl_variable_u {
+    uint8_t type;
+    void* value;
+    size_t size;
+} bl_variable_t;
+
 typedef struct bl_fragment_u {
     int16_t x;
     int16_t y;
@@ -107,7 +113,7 @@ typedef struct {
     /*! color used for clear */
     bl_color_t clear_color;
     
-    uint8_t uniform[256];
+    bl_variable_t uniform[16];
     
     bl_texture_t* texture;
     
@@ -192,6 +198,11 @@ int bl_raster_get_height(bl_raster_t* raster);
 void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type);
 
 void bl_raster_set_texture(bl_raster_t* raster,bl_texture_t* texture);
+
+void bl_raster_uniform_set_matrix(bl_raster_t* raster,int location,bl_matrix_t* matrix);
+
+void bl_raster_uniform_set_vector(bl_raster_t* raster,int location,bl_vector_t* vector);
+
 
 #ifdef __cplusplus
 }

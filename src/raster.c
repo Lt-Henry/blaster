@@ -392,6 +392,10 @@ bl_raster_t* bl_raster_new(int width,int height,int draw_workers,int update_work
         raster->workers[w]=bl_worker_new(BL_WORKER_UPDATE,0);
         bl_worker_start(raster->workers[w],update_worker,raster);
     }
+
+    for (int n=0;n<16;n++) {
+        raster->uniform[n].value=0;
+    }
     
     return raster;
 }
@@ -421,6 +425,11 @@ void bl_raster_delete(bl_raster_t* raster)
 
     bl_raster_free_chunks(raster);
     
+    for (int n=0;n<16;n++) {
+       if(raster->uniform[n].value != 0) {
+           free(raster->uniform[n].value);
+        }
+    }
     free(raster);
 }
 
@@ -605,6 +614,40 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
 void bl_raster_set_texture(bl_raster_t* raster,bl_texture_t* texture)
 {
     raster->texture=texture;
+}
+
+void bl_raster_uniform_set_matrix(bl_raster_t* raster,int location,bl_matrix_t* matrix)
+{
+    if (raster->uniform[location].value == 0) {
+        raster->uniform[location].value = malloc(sizeof(bl_matrix_t));
+        raster->uniform[location].size = sizeof(bl_matrix_t);
+    }
+    else {
+        if (raster->uniform[location].size != sizeof(bl_matrix_t)) {
+            free(raster->uniform[location].value);
+            raster->uniform[location].value = malloc(sizeof(bl_matrix_t));
+            raster->uniform[location].size = sizeof(bl_matrix_t);
+        }
+    }
+
+    memcpy(raster->uniform[location].value,matrix,sizeof(bl_matrix_t));
+}
+
+void bl_raster_uniform_set_vector(bl_raster_t* raster,int location,bl_vector_t* vector)
+{
+    if (raster->uniform[location].value == 0) {
+        raster->uniform[location].value = malloc(sizeof(bl_vector_t));
+        raster->uniform[location].size = sizeof(bl_vector_t);
+    }
+    else {
+        if (raster->uniform[location].size != sizeof(bl_vector_t)) {
+            free(raster->uniform[location].value);
+            raster->uniform[location].value = malloc(sizeof(bl_vector_t));
+            raster->uniform[location].size = sizeof(bl_vector_t);
+        }
+    }
+
+    memcpy(raster->uniform[location].value,vector,sizeof(bl_vector_t));
 }
 
 void bl_raster_draw_points(bl_raster_t* raster,bl_vbo_t* vbo,size_t start,size_t count)
@@ -1173,19 +1216,20 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
 
 void bl_raster_basic_vertex_shader(bl_raster_t* raster, size_t n, float* attributes, float* variying, float* flat, bl_vector_t* position)
 {
-    bl_matrix_t* matrix = (bl_matrix_t*) raster->uniform;
+    bl_matrix_t* mvp = (bl_matrix_t*) raster->uniform[0].value;
     bl_vector_t* vector = (bl_vector_t*) attributes;
     
-    bl_vector_mult(position,vector,matrix); //postion * mvp matrix
+    bl_vector_mult(position,vector,mvp); //postion * mvp matrix
     
     if (n==0) {
-        bl_vector_t light_pos = {0.0f,1.0f,-1.0f,0.0f};
+        bl_matrix_t* modelview = (bl_matrix_t*) raster->uniform[1].value;
+        bl_vector_t* light_pos = (bl_vector_t*) raster->uniform[2].value;
         bl_color_t light_diffuse = {0.5f,0.5f,0.5f,1.0f};
         
         bl_vector_t normal;
-        bl_vector_mult(&normal,&vector[1],&matrix[1]); //normal * mv matrix
+        bl_vector_mult(&normal,&vector[1],modelview); //normal * mv matrix
         
-        float cosAlpha = bl_vector_dot(&normal,&light_pos);
+        float cosAlpha = bl_vector_dot(&normal,light_pos);
         cosAlpha=fabs(cosAlpha);
         
         bl_color_t* material = (bl_color_t*) flat;
