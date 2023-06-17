@@ -1230,19 +1230,25 @@ void bl_raster_basic_vertex_shader(bl_raster_t* raster, size_t n, float* attribu
         bl_vector_mult(&normal,&vector[1],modelview); //normal * mv matrix
         
         float cosAlpha = bl_vector_dot(&normal,light_pos);
-        cosAlpha=fabs(cosAlpha);
+        //cosAlpha=fabs(cosAlpha);
+        if (cosAlpha<0.0f) {
+            cosAlpha=0.0f;
+        }
         
-        bl_color_t* material = (bl_color_t*) flat;
-        bl_color_set(material,0.5f,0.5f,0.5f,1.0f);
+        //bl_color_t* material = (bl_color_t*) flat;
+        bl_color_t material;
+        bl_color_set(&material,0.5f,0.5f,0.5f,1.0f);
         
-        bl_color_scale(material,cosAlpha);
+        bl_color_scale(&material,cosAlpha);
+        uint32_t* pixel = (uint32_t*)flat;
+        *pixel = bl_color_get_pixel(&material).value;
         
     }
 }
 
 void bl_raster_basic_fragment_shader(bl_raster_t* raster, float* attributes, float* variying, float* flat, bl_fragment_t* fragment)
 {
-    bl_color_t* color = (bl_color_t*) flat;
-    fragment->pixel=bl_color_get_pixel(color).value;
-    //fragment->pixel=0xff000000;
+    //bl_color_t* color = (bl_color_t*) flat;
+    //fragment->pixel=bl_color_get_pixel(color).value;
+    fragment->pixel=*((uint32_t*)flat);
 }
