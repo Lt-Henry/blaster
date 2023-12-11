@@ -1098,9 +1098,9 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         rz[1]=1.0f/ndc[1].z;
         rz[2]=1.0f/ndc[2].z;
         */
-        rz[0]=rcp(ndc[0].z);
-        rz[1]=rcp(ndc[1].z);
-        rz[2]=rcp(ndc[2].z);
+        rz[0]=rcp(clip[0].w);
+        rz[1]=rcp(clip[1].w);
+        rz[2]=rcp(clip[2].w);
         /*
         for (size_t v=0;v<3;v++) {
             float* tmp = bl_vbo_get(vbo,start+n+v);
@@ -1147,6 +1147,12 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         
         float pl[4];
         
+        for (int vy=0;vy<2;vy++) {
+            varying[(16*0)+vy] = varying[(16*0)+vy]*rz[0];
+            varying[(16*1)+vy] = varying[(16*1)+vy]*rz[1];
+            varying[(16*2)+vy] = varying[(16*2)+vy]*rz[2];
+        }
+        
         for (int32_t y=sy;y!=ey;y++) {
             in = false;
             
@@ -1175,17 +1181,26 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                     lambda[1]=lambda[1]*area;
                     lambda[2]=lambda[2]*area;
                     
-                    //z = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
+                    float onez = rz[0]*lambda[0] + rz[1]*lambda[1] + rz[2]*lambda[2];
+                    z = 1.0f/onez;
+                    
                    //z = rz[0]+lambda[1]*A + lambda[2]*B;
-                    z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
+                    
+                    //z = ndc[0].z*lambda[0] + ndc[1].z*lambda[1] + ndc[2].z*lambda[2];
                     
                     //z = ndc[0].z+lambda[1]*A + lambda[2]*B;
                     
-                    fragment.depth=(z*wl.z)+wl.z;
+                    fragment.depth=((1.0f - onez)*wl.z)+wl.z;
                     
                     for (int vy=0;vy<2;vy++) {
-                        mix[vy] = varying[(16*0)+vy]*lambda[0] + varying[(16*1)+vy]*lambda[1] + varying[(16*2)+vy]*lambda[2];
+                        mix[vy] = 
+                         varying[(16*0)+vy]*lambda[0] +
+                         varying[(16*1)+vy]*lambda[1] + 
+                         varying[(16*2)+vy]*lambda[2];
+                        
+                        mix[vy] = mix[vy] * z;
                     }
+                    mix[2] = onez;
 
                     /*
                     for (size_t w=4;w<vbo->vertex_size;w++) {
@@ -1273,15 +1288,15 @@ void bl_raster_tex1_fragment_shader(bl_raster_t* raster, float* attributes, floa
 {
     float u = varying[0];
     float v = varying[1];
+    float z = varying[2];
 
     if (u > 0.5f ^ v > 0.5f) {
-        bl_color_t color = {0,0,0,1};
+        bl_color_t color = {z,z,z,1};
         fragment->pixel=bl_color_get_pixel(&color).value;
     }
     else {
         bl_color_t color = {1,1,1,1};
         fragment->pixel=bl_color_get_pixel(&color).value;
     }
-
 
 }
