@@ -37,23 +37,24 @@ bl_texture_t* bl_tga_load(const char* filename)
     printf("tga size:%dx%d\n",header.width,header.height);
     printf("tga bpp:%d\n",header.bpp);
     
-    size_t bitmap_size = header.width*header.height*(header.bpp/8);
+    size_t bitmap_size = header.width*header.height*(4);
     printf("tga data size:%d\n",bitmap_size);
     
     switch (header.image_type) {
         case  BL_TGA_TYPE_UNCOMPRESSED_RGB: {
             uint8_t* data=malloc(bitmap_size);
+            uint8_t* ptr = data;
 
             for (int n=0;n<header.width*header.height;n++) {
                 uint8_t tmp[4];
                 fread(tmp,header.bpp/8,1,file);
 
-                data[0]=tmp[0];
-                data[1]=tmp[1];
-                data[2]=tmp[2];
-                data[3]=tmp[3];
+                ptr[0]=tmp[0];
+                ptr[1]=tmp[1];
+                ptr[2]=tmp[2];
+                ptr[3]=0xff;
 
-                data+=4;
+                ptr+=4;
             }
 
             texture = bl_texture_new_from_data(header.width,header.height,BL_TEXTURE_U32,data);

@@ -1208,17 +1208,17 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
                         values[w] = rvalues[q+w]*lambda[0] + rvalues[(q*2)+w]*lambda[1] + rvalues[(q*3)+w]*lambda[2];
                     }
                     */
-                    
+
                     bl_raster_tex1_fragment_shader(raster,
                                                     NULL,
                                                     mix,
                                                     flat,
                                                     &fragment);
-                    
-                    //bl_color_t dc;
+
+                    //bl_color_t dc = {1,0,1,1};
                     //bl_color_set(&dc,(z*0.5f)+1.0f,(z*0.5f)+1.0f,(z*0.5f)+1.0f,1.0f);
                     //fragment.pixel=bl_color_get_pixel(&dc).value;
-                    
+                    //fragment.pixel = 0x323232ff;
                     bl_raster_put_fragment(raster,&chunk,&fragment);
                 }
                 else {
@@ -1288,15 +1288,17 @@ void bl_raster_tex1_fragment_shader(bl_raster_t* raster, float* attributes, floa
 {
     float u = varying[0];
     float v = varying[1];
-    float z = varying[2];
 
+    fragment->pixel = bl_texture_get_texel(raster->texture,u,v).value;
+    //fragment->pixel = 0xff3232ff;
+    /*
     if (u > 0.5f ^ v > 0.5f) {
-        bl_color_t color = {z,z,z,1};
+        bl_color_t color = {0,0,0,1};
         fragment->pixel=bl_color_get_pixel(&color).value;
     }
     else {
         bl_color_t color = {1,1,1,1};
         fragment->pixel=bl_color_get_pixel(&color).value;
     }
-
+    */
 }
