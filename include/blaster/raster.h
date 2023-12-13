@@ -32,6 +32,7 @@ extern "C" {
 #include "queue.h"
 #include "worker.h"
 #include "vector.h"
+#include "color.h"
 
 #define BL_MAX_CHUNKS       128
 #define BL_MAX_FRAGMENTS    4096
@@ -48,8 +49,20 @@ typedef struct bl_fragment_u {
     int16_t y;
     uint16_t depth;
     uint16_t padding0;
-    
-    uint32_t pixel;
+/*
+    union {
+        bl_color_t color;
+        uint32_t pixel;
+    };
+*/
+    union {
+        struct {
+            float u;
+            float v;
+        } texture;
+        uint32_t pixel;
+    };
+    //uint32_t pixel;
     
 } bl_fragment_t;
 

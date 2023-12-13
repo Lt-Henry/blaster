@@ -198,7 +198,9 @@ void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk)
         if (chunk->buffer[n].depth<*zbuffer) {
             
             *zbuffer=chunk->buffer[n].depth;
-            *cbuffer=chunk->buffer[n].pixel;
+            //*cbuffer=chunk->buffer[n].pixel;
+            //*cbuffer = bl_color_get_pixel(&chunk->buffer[n].color).value;
+            *cbuffer = bl_texture_get_texel(raster->texture,chunk->buffer[n].texture.u,chunk->buffer[n].texture.v).value;
         }
     }
     
@@ -1289,8 +1291,19 @@ void bl_raster_tex1_fragment_shader(bl_raster_t* raster, float* attributes, floa
     float u = varying[0];
     float v = varying[1];
 
-    fragment->pixel = bl_texture_get_texel(raster->texture,u,v).value;
+    //fragment->pixel = bl_texture_get_texel(raster->texture,u,v).value;
+    fragment->texture.u = u;
+    fragment->texture.v = v;
+
     //fragment->pixel = 0xff3232ff;
+    //bl_color_t color = {v,u,0,1};
+    //fragment->pixel=bl_color_get_pixel(&color).value;
+    /*
+    fragment->color.r = v;
+    fragment->color.g = u;
+    fragment->color.r = 0;
+    fragment->color.a = 1;
+    */
     /*
     if (u > 0.5f ^ v > 0.5f) {
         bl_color_t color = {0,0,0,1};
