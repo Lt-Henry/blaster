@@ -17,9 +17,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#define _GNU_SOURCE
+
 #include <blaster/worker.h>
 
 #include <stdlib.h>
+#include <pthread.h>
+#include <sched.h>
 
 bl_worker_t* bl_worker_new(uint8_t type,uint32_t flags)
 {
@@ -38,6 +42,13 @@ void bl_worker_start(bl_worker_t* worker,void *(*func) (void *),void* args)
 {
     worker->args=args;
     pthread_create(&worker->thread,NULL,func,worker);
+
+    if (worker->type == BL_WORKER_UPDATE) {
+        cpu_set_t cpuset;
+        CPU_ZERO(&cpuset);
+        CPU_SET(0,&cpuset);
+        pthread_setaffinity_np(worker->thread, sizeof(cpuset), &cpuset);
+    }
 }
 
 void bl_worker_delete(bl_worker_t* worker)

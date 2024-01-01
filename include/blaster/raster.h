@@ -55,6 +55,7 @@ typedef struct bl_fragment_u {
         uint32_t pixel;
     };
 */
+/*
     union {
         struct {
             float u;
@@ -62,7 +63,8 @@ typedef struct bl_fragment_u {
         } texture;
         uint32_t pixel;
     };
-    //uint32_t pixel;
+    */
+    uint32_t pixel;
     
 } bl_fragment_t;
 

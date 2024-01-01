@@ -198,9 +198,9 @@ void bl_raster_update_chunk(bl_raster_t* raster,bl_fragment_chunk_t* chunk)
         if (chunk->buffer[n].depth<*zbuffer) {
             
             *zbuffer=chunk->buffer[n].depth;
-            //*cbuffer=chunk->buffer[n].pixel;
+            *cbuffer=chunk->buffer[n].pixel;
             //*cbuffer = bl_color_get_pixel(&chunk->buffer[n].color).value;
-            *cbuffer = bl_texture_get_texel(raster->texture,chunk->buffer[n].texture.u,chunk->buffer[n].texture.v).value;
+            //*cbuffer = bl_texture_get_texel(raster->texture,chunk->buffer[n].texture.u,chunk->buffer[n].texture.v).value;
         }
     }
     
@@ -1242,6 +1242,11 @@ void bl_raster_tex1_vertex_shader(bl_raster_t* raster, size_t n, float* attribut
 
 void bl_raster_tex1_fragment_shader(bl_raster_t* raster, float* attributes, float* varying, float* flat, bl_fragment_t* fragment)
 {
+    /*
     fragment->texture.u = varying[0];
     fragment->texture.v = varying[1];
+    */
+    fragment->pixel = bl_texture_get_texel(raster->texture,varying[0],varying[1]).value;
+
+    //fragment->pixel = 0xff326688;
 }
