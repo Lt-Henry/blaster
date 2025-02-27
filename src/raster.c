@@ -317,11 +317,13 @@ void* update_worker(void* args)
             case BL_CMD_CLEAR:
                 
                 bl_raster_clear_buffers(raster);
+                worker->update.chunks = 0;
                 bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
             
             case BL_CMD_UPDATE:
                 bl_raster_update_chunk(raster,cmd->update.chunk);
+                worker->update.chunks++;
                 bl_queue_push(raster->queue_free_chunks,cmd->update.chunk);
                 bl_queue_push(raster->queue_free_update_commands,cmd);
             break;
@@ -573,7 +575,7 @@ void bl_raster_draw(bl_raster_t* raster,bl_vbo_t* vbo,uint8_t type)
     bl_command_t* cmd;
     
     int nv=1;
-    size_t block=32;
+    size_t block=256;
     size_t count;
     
     size_t start=0;

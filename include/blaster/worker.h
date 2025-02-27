@@ -44,6 +44,10 @@ typedef struct {
         uint64_t start;
         uint64_t last;
     } time;
+
+    struct {
+        uint64_t chunks;
+    } update;
     
 } bl_worker_t;
 

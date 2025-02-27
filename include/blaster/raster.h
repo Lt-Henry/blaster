@@ -34,8 +34,8 @@ extern "C" {
 #include "vector.h"
 #include "color.h"
 
-#define BL_MAX_CHUNKS       128
-#define BL_MAX_FRAGMENTS    4096
+#define BL_MAX_CHUNKS       256
+#define BL_MAX_FRAGMENTS    128
 #define BL_MAX_COMMANDS     128
 
 typedef struct bl_variable_u {
