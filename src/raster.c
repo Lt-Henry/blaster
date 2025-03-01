@@ -1084,10 +1084,10 @@ void bl_raster_draw_triangles(bl_raster_t* raster, bl_vbo_t* vbo,size_t start,si
         }
         */
         xmin = max_f32(0,xmin);
-        xmax = min_f32(raster->screen_width,xmax);
+        xmax = min_f32(raster->screen_width - 1,xmax);
         
         ymin = max_f32(0,ymin);
-        ymax = min_f32(raster->screen_height,ymax);
+        ymax = min_f32(raster->screen_height - 1,ymax);
         
         bl_fragment_t fragment;
 
